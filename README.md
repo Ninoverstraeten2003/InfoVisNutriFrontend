@@ -1,21 +1,52 @@
-# Next.js template
+# NutriVerse PostgREST Frontend
 
-This is a Next.js template with shadcn/ui.
+This app is a Next.js frontend for the NutriVerse PostgREST RPC endpoints.
+It includes a single-page API explorer with endpoint forms and JSON output panes for:
 
-## Adding components
+- Viz 1: `viz1_graph_edges`, `viz1_degree_summary`, `viz1_food_anchors`, `viz1_option_nutrients`
+- Viz 2: `viz2_top_foods`, `viz2_food_panel`, `viz2_support_cluster`, `viz2_conflict_aware`, `viz2_curated_rank`
 
-To add components to your app, run the following command:
+It also includes a visual layer (network map, ranked bars, and compact tables) that is driven directly by these RPC responses.
+
+## 1) Prepare DB API Objects
 
 ```bash
-npx shadcn@latest add button
+psql nutriverse -f db/postgrest_api.sql
 ```
 
-This will place the ui components in the `components` directory.
+## 2) Start PostgREST
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
+```bash
+postgrest postgrest.conf
 ```
+
+By default this exposes:
+
+```text
+http://127.0.0.1:3000
+```
+
+## 3) Configure Frontend Base URL
+
+Create `.env.local` with:
+
+```bash
+NEXT_PUBLIC_POSTGREST_URL=http://127.0.0.1:3000
+```
+
+If you skip this, the UI defaults to `http://127.0.0.1:3000`.
+
+## 4) Run Frontend
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open:
+
+```text
+http://localhost:3001
+```
+
+In the UI, click **Load sample visuals** to fetch all endpoints with default parameters and populate the dashboard in one action.

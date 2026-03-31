@@ -80,6 +80,28 @@
     --sidebar-accent-foreground: oklch(0.214 0.009 43.1);
     --sidebar-border: oklch(0.922 0.005 34.3);
     --sidebar-ring: oklch(0.714 0.014 41.2);
+
+     /* Cosmos color palette */
+    --cosmos-sun: #fff59d;
+    --cosmos-sun-glow: #ffb300;
+    --cosmos-planet-vitamin: #4fc3f7;
+    --cosmos-planet-mineral: #80cbc4;
+    --cosmos-planet-amino: #ce93d8;
+    --cosmos-planet-macronutrient: #ff8a65;
+    --cosmos-planet-fatty: #ffcc80;
+    --cosmos-planet-other: #a5d6a7;
+    --cosmos-food-dot: #e8eaf6;
+    --cosmos-edge: #1e3a6e;
+    --cosmos-star-bg: #050814;
+
+    --sidebar: #0a0f2e;
+    --sidebar-foreground: #e8eaf6;
+    --sidebar-primary: #4fc3f7;
+    --sidebar-primary-foreground: #050814;
+    --sidebar-accent: #0d1a3a;
+    --sidebar-accent-foreground: #e8eaf6;
+    --sidebar-border: #1a2a5a;
+    --sidebar-ring: #4fc3f7;
 }
 
 .dark {
