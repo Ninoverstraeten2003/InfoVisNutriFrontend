@@ -37,6 +37,38 @@ type RpcCallArgs = {
   body?: unknown
 }
 
+export interface FoodOption {
+  food_id: number;
+  food_name: string;
+  food_category: string;
+}
+
+export interface MealItem {
+  food_id: number;
+  food_name: string;
+  food_category: string;
+  grams: number;
+}
+
+export interface Demographics {
+  age: number;
+  weight_kg: number;
+  sex: "male" | "female";
+  activity_level: "sedentary" | "low" | "moderate" | "high" | "very_high";
+}
+
+export interface NutrientResult {
+  nutrient_name: string;
+  nutrient_category: string;
+  consumed_value: number;
+  target_value: number;
+  unit: string;
+  percentage_met: number;
+}
+
+export type NutritionResults = NutrientResult[];
+
+
 export type {
   Row,
   VisualData,
@@ -46,3 +78,4 @@ export type {
   EndpointState,
   RpcCallArgs,
 }
+
