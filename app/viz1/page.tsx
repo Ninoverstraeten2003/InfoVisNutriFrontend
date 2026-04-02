@@ -6,11 +6,35 @@ import CosmosHeader from '@/components/viz1/cosmos-header'
 import NutrientInfoPanel from '@/components/viz1/nutrient-info-panel'
 import NutrientSidebar from '@/components/viz1/nutrient-sidebar'
 import { buildViz1CosmosModel } from '@/lib/viz1-cosmos'
-import { callRpc, cleanBaseUrl, extractDefaultOption, nonEmptyQuery } from '@/lib/utils'
+import { extractDefaultOption, nonEmptyQuery } from '@/lib/utils'
 
 const CosmosGraph = dynamic(() => import('@/components/viz1/cosmos-graph'), { ssr: false })
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_POSTGREST_URL ?? 'http://127.0.0.1:3000'
+async function fetchViz1Data(rpcName: string, query?: Record<string, string | number>) {
+  const endpointMap: Record<string, string> = {
+    'viz1_option_nutrients': '/api/viz1-option-nutrients',
+    'viz1_graph_edges': '/api/viz1-graph-edges',
+    'viz1_degree_summary': '/api/viz1-degree-summary',
+    'viz1_food_anchors': '/api/viz1-food-anchors',
+  }
+  
+  const url = new URL(endpointMap[rpcName], window.location.origin)
+  if (query) {
+    Object.entries(query).forEach(([k, v]) => {
+      url.searchParams.set(k, String(v))
+    })
+  }
+
+  const res = await fetch(url.toString(), {
+    headers: { Accept: 'application/json' },
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
 
 type Viz1PageState = {
   edges: unknown
@@ -31,8 +55,6 @@ export default function Page() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const baseUrl = cleanBaseUrl(defaultBaseUrl)
 
   const model = useMemo(
     () =>
@@ -57,17 +79,15 @@ export default function Page() {
   }, [model.selectedId])
 
   const loadFoodAnchors = useCallback(async (nutrientName: string) => {
-    const foodAnchors = await callRpc({
-      baseUrl,
-      rpcName: 'viz1_food_anchors',
-      method: 'GET',
-      query: nonEmptyQuery({
+    const foodAnchors = await fetchViz1Data(
+      'viz1_food_anchors',
+      nonEmptyQuery({
         ...(nutrientName ? { p_selected_nutrient: nutrientName } : {}),
-      }),
-    })
+      })
+    )
 
     setData((current) => ({ ...current, foodAnchors }))
-  }, [baseUrl])
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -77,34 +97,20 @@ export default function Page() {
       setError(null)
 
       try {
-        const optionData = await callRpc({
-          baseUrl,
-          rpcName: 'viz1_option_nutrients',
-          method: 'GET',
-        })
+        const optionData = await fetchViz1Data('viz1_option_nutrients')
 
         const defaultNutrient =
           extractDefaultOption(optionData, ['selected_nutrient', 'nutrient_name', 'nutrient']) ?? ''
 
         const [edges, degree, foodAnchors] = await Promise.all([
-          callRpc({
-            baseUrl,
-            rpcName: 'viz1_graph_edges',
-            method: 'GET',
-          }),
-          callRpc({
-            baseUrl,
-            rpcName: 'viz1_degree_summary',
-            method: 'GET',
-          }),
-          callRpc({
-            baseUrl,
-            rpcName: 'viz1_food_anchors',
-            method: 'GET',
-            query: nonEmptyQuery({
+          fetchViz1Data('viz1_graph_edges'),
+          fetchViz1Data('viz1_degree_summary'),
+          fetchViz1Data(
+            'viz1_food_anchors',
+            nonEmptyQuery({
               ...(defaultNutrient ? { p_selected_nutrient: defaultNutrient } : {}),
-            }),
-          }),
+            })
+          ),
         ])
 
         if (cancelled) return
@@ -126,7 +132,7 @@ export default function Page() {
     return () => {
       cancelled = true
     }
-  }, [baseUrl])
+  }, [])
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(id)
@@ -166,7 +172,7 @@ export default function Page() {
     return (
       <main
         className="flex h-screen w-screen items-center justify-center overflow-hidden"
-        style={{ background: '#050814', color: '#e8eaf6' }}
+        style={{ background: 'var(--cosmos-star-bg)', color: 'var(--cosmos-food-dot)' }}
       >
         Loading nutrient cosmos...
       </main>
@@ -177,7 +183,7 @@ export default function Page() {
     return (
       <main
         className="flex h-screen w-screen items-center justify-center overflow-hidden p-6 text-center"
-        style={{ background: '#050814', color: error ? '#fda4af' : '#e8eaf6' }}
+        style={{ background: 'var(--cosmos-star-bg)', color: error ? '#fda4af' : 'var(--cosmos-food-dot)' }}
       >
         {error ?? 'No Viz 1 nutrient data available.'}
       </main>
@@ -187,7 +193,7 @@ export default function Page() {
   return (
     <main
       className="flex h-screen w-screen overflow-hidden"
-      style={{ background: '#050814', color: '#e8eaf6' }}
+      style={{ background: 'var(--cosmos-star-bg)', color: 'var(--cosmos-food-dot)' }}
     >
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <CosmosHeader nutrients={model.nutrients} history={history} onNavigate={handleNavigateHistory} />
@@ -195,12 +201,12 @@ export default function Page() {
         <div className="flex flex-1 overflow-hidden">
           <button
             className="absolute left-0 top-1/2 z-30 -translate-y-1/2 rounded-r-md p-1 sm:hidden"
-            style={{ background: '#0d1a3a', border: '1px solid #1a2a5a', borderLeft: 'none' }}
+            style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)', borderLeft: 'none' }}
             onClick={() => setSidebarOpen((value) => !value)}
             aria-label="Toggle sidebar"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d={sidebarOpen ? 'M9 2L4 7L9 12' : 'M5 2L10 7L5 12'} stroke="#4fc3f7" strokeWidth="1.5" strokeLinecap="round" />
+              <path d={sidebarOpen ? 'M9 2L4 7L9 12' : 'M5 2L10 7L5 12'} stroke="var(--sidebar-primary)" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
 
@@ -224,24 +230,24 @@ export default function Page() {
                 onClick={() => setSidebarOpen((value) => !value)}
                 className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-mono transition-all sm:flex"
                 style={{
-                  background: 'rgba(10,15,46,0.85)',
-                  border: '1px solid #1a2a5a',
-                  color: '#546e7a',
+                  background: 'color-mix(in srgb, var(--sidebar) 85%, transparent)',
+                  border: '1px solid var(--sidebar-border)',
+                  color: 'var(--foreground)',
                   backdropFilter: 'blur(8px)',
                 }}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <rect x="1" y="2" width="4" height="8" rx="1" stroke="#4fc3f7" strokeWidth="1" />
-                  <path d="M8 4h2M8 6h2M8 8h2" stroke="#4fc3f7" strokeWidth="1" strokeLinecap="round" />
+                  <rect x="1" y="2" width="4" height="8" rx="1" stroke="var(--sidebar-primary)" strokeWidth="1" />
+                  <path d="M8 4h2M8 6h2M8 8h2" stroke="var(--sidebar-primary)" strokeWidth="1" strokeLinecap="round" />
                 </svg>
                 {sidebarOpen ? 'Hide' : 'Show'} nutrients
               </button>
               <div
                 className="rounded-full px-3 py-1.5 text-xs font-mono"
                 style={{
-                  background: 'rgba(10,15,46,0.85)',
-                  border: '1px solid #1a2a5a',
-                  color: '#546e7a',
+                  background: 'color-mix(in srgb, var(--sidebar) 85%, transparent)',
+                  border: '1px solid var(--sidebar-border)',
+                  color: 'var(--foreground)',
                   backdropFilter: 'blur(8px)',
                 }}
               >
@@ -251,15 +257,15 @@ export default function Page() {
                 onClick={() => setInfoPanelOpen((value) => !value)}
                 className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-mono transition-all sm:flex"
                 style={{
-                  background: 'rgba(10,15,46,0.85)',
-                  border: '1px solid #1a2a5a',
-                  color: '#546e7a',
+                  background: 'color-mix(in srgb, var(--sidebar) 85%, transparent)',
+                  border: '1px solid var(--sidebar-border)',
+                  color: 'var(--foreground)',
                   backdropFilter: 'blur(8px)',
                 }}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5" stroke="#4fc3f7" strokeWidth="1" />
-                  <path d="M6 5v4M6 3.5v.5" stroke="#4fc3f7" strokeWidth="1" strokeLinecap="round" />
+                  <circle cx="6" cy="6" r="5" stroke="var(--sidebar-primary)" strokeWidth="1" />
+                  <path d="M6 5v4M6 3.5v.5" stroke="var(--sidebar-primary)" strokeWidth="1" strokeLinecap="round" />
                 </svg>
                 {infoPanelOpen ? 'Hide' : 'Show'} info
               </button>

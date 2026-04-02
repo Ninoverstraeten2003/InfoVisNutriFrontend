@@ -12,12 +12,12 @@ export default function CosmosHeader({ nutrients, history, onNavigate }: Props) 
   return (
     <header
       className="flex items-center px-4 h-11 gap-2 flex-shrink-0"
-      style={{ background: 'rgba(10,15,46,0.98)', borderBottom: '1px solid #1a2a5a' }}
+      style={{ background: 'color-mix(in srgb, var(--sidebar) 98%, transparent)', borderBottom: '1px solid var(--sidebar-border)' }}
     >
       {/* Logo */}
       <div className="flex items-center gap-2 mr-4">
         <div className="relative w-5 h-5 flex-shrink-0">
-          <div className="absolute inset-0 rounded-full bg-yellow-200 opacity-90" style={{ boxShadow: '0 0 8px #fff59d' }} />
+          <div className="absolute inset-0 rounded-full bg-yellow-200 opacity-90" style={{ boxShadow: '0 0 8px var(--cosmos-sun)' }} />
           <div className="absolute inset-1 rounded-full bg-yellow-400 opacity-70" />
         </div>
         <span className="text-xs font-bold tracking-widest uppercase font-sans text-foreground/70">NutriCosmos</span>
@@ -38,7 +38,7 @@ export default function CosmosHeader({ nutrients, history, onNavigate }: Props) 
                 className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono transition-all"
                 style={{
                   background: isLast ? col + '20' : 'transparent',
-                  color: isLast ? col : 'rgba(232,234,246,0.4)',
+                  color: isLast ? col : 'var(--muted-foreground)',
                   border: `1px solid ${isLast ? col + '60' : 'transparent'}`,
                   fontWeight: isLast ? 700 : 400,
                 }}
@@ -55,7 +55,7 @@ export default function CosmosHeader({ nutrients, history, onNavigate }: Props) 
       </div>
 
       {/* Info */}
-      <div className="text-xs font-mono opacity-30 flex-shrink-0 hidden sm:block">
+      <div className="text-xs font-mono text-muted-foreground flex-shrink-0 hidden sm:block">
         {nutrients.length} nutrients · cosmos view
       </div>
     </header>

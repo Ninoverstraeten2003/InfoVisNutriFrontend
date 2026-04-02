@@ -160,20 +160,9 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
     tickRef.current += 1
     const t = tickRef.current
 
-    // Background
-    ctx.fillStyle = '#050814'
-    ctx.fillRect(0, 0, w, h)
+    // Clear background
+    ctx.clearRect(0, 0, w, h)
 
-    // Stars twinkle
-    starsRef.current.forEach(star => {
-      star.op += star.speed * Math.sin(t * 0.02 + star.x)
-      if (star.op > 0.85) star.speed = -Math.abs(star.speed)
-      if (star.op < 0.05) star.speed = Math.abs(star.speed)
-      ctx.beginPath()
-      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(200,220,255,${Math.max(0, Math.min(1, star.op))})`
-      ctx.fill()
-    })
 
     const selectedNutrient = nutrients.find(n => n.id === selectedNutrientId)
     if (!selectedNutrient) return
@@ -384,7 +373,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
     ctx.font = `bold ${Math.max(10, sunR * 0.32)}px "Space Grotesk", sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillStyle = '#050814'
+    ctx.fillStyle = '#1e293b'
     ctx.fillText(selectedNutrient.shortName, cx, cy - 4)
     ctx.font = `${Math.max(7, sunR * 0.2)}px "Space Mono", monospace`
     ctx.fillStyle = 'rgba(5,8,20,0.7)'
@@ -508,17 +497,17 @@ function TooltipPanel({ tooltip, canvasWidth, canvasHeight }: { tooltip: Tooltip
         style={{
           left: x + offsetX,
           top: y + offsetY,
-          background: 'rgba(10,15,46,0.95)',
+          background: 'color-mix(in srgb, var(--sidebar) 95%, transparent)',
           borderColor: col,
           boxShadow: `0 0 20px ${col}33`,
         }}
       >
-        <div className="font-bold text-base mb-1" style={{ color: '#fff59d' }}>{n.name}</div>
-        <div className="text-xs opacity-60 mb-2 uppercase tracking-wider font-mono">{n.family}</div>
-        <div className="text-xs opacity-80">
+        <div className="font-bold text-base mb-1" style={{ color: 'var(--cosmos-sun)' }}>{n.name}</div>
+        <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-mono">{n.family}</div>
+        <div className="text-xs text-foreground/80">
           <span className="font-bold" style={{ color: col }}>{n.links.length}</span> linked nutrients
         </div>
-        <div className="text-xs opacity-50 mt-1">Click a planet to explore · Double-click to navigate</div>
+        <div className="text-xs text-muted-foreground mt-1">Click a planet to explore · Double-click to navigate</div>
       </div>
     )
   }
@@ -534,7 +523,7 @@ function TooltipPanel({ tooltip, canvasWidth, canvasHeight }: { tooltip: Tooltip
         style={{
           left: x + offsetX,
           top: y + offsetY,
-          background: 'rgba(10,15,46,0.95)',
+          background: 'color-mix(in srgb, var(--sidebar) 95%, transparent)',
           borderColor: col,
           boxShadow: `0 0 20px ${col}44`,
         }}
@@ -543,12 +532,12 @@ function TooltipPanel({ tooltip, canvasWidth, canvasHeight }: { tooltip: Tooltip
           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: col }} />
           <span className="font-bold text-base" style={{ color: col }}>{nutrient.name}</span>
         </div>
-        <div className="text-xs opacity-50 uppercase tracking-wider font-mono mb-2">{nutrient.family}</div>
+        <div className="text-xs text-muted-foreground uppercase tracking-wider font-mono mb-2">{nutrient.family}</div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs mb-2">
-          <span className="opacity-60">Best source</span>
+          <span className="text-muted-foreground">Best source</span>
           <span className="font-mono font-bold" style={{ color: col }}>{top?.name ?? "No foods"}</span>
         </div>
-        <div className="text-xs opacity-40 border-t pt-2" style={{ borderColor: col + '44' }}>
+        <div className="text-xs text-muted-foreground border-t pt-2" style={{ borderColor: 'var(--border)' }}>
           Click again to navigate → {nutrient.shortName}
         </div>
       </div>

@@ -17,20 +17,20 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
   const filtered = nutrients.filter(n => filter === 'all' || n.family === filter)
 
   return (
-    <aside className="flex flex-col h-full overflow-hidden" style={{ background: 'rgba(10,15,46,0.95)', borderRight: '1px solid #1a2a5a' }}>
+    <aside className="flex flex-col h-full overflow-hidden" style={{ background: 'color-mix(in srgb, var(--sidebar) 95%, transparent)', borderRight: '1px solid var(--sidebar-border)' }}>
       {/* Header */}
-      <div className="px-4 pt-5 pb-3 border-b" style={{ borderColor: '#1a2a5a' }}>
+      <div className="px-4 pt-5 pb-3 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-2 h-2 rounded-full bg-yellow-200 animate-pulse" />
           <h2 className="font-bold text-sm tracking-widest uppercase text-foreground/80 font-sans">
             NutriCosmos
           </h2>
         </div>
-        <p className="text-xs opacity-40 font-mono">Select a nutrient to explore</p>
+        <p className="text-xs text-muted-foreground font-mono">Select a nutrient to explore</p>
       </div>
 
       {/* Family filter chips */}
-      <div className="px-3 py-2.5 flex flex-wrap gap-1.5 border-b" style={{ borderColor: '#1a2a5a' }}>
+      <div className="px-3 py-2.5 flex flex-wrap gap-1.5 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
         <button
           onClick={() => setFilter('all')}
           className={`px-2.5 py-0.5 rounded-full text-xs font-mono transition-all ${filter === 'all' ? 'bg-primary/20 text-primary border border-primary/50' : 'text-foreground/40 border border-border/30 hover:border-border'}`}
@@ -46,8 +46,8 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
               className="px-2.5 py-0.5 rounded-full text-xs font-mono transition-all"
               style={{
                 background: filter === fam ? col + '25' : 'transparent',
-                color: filter === fam ? col : 'rgba(232,234,246,0.4)',
-                border: `1px solid ${filter === fam ? col + '80' : '#1a2a5a'}`,
+                color: filter === fam ? col : 'var(--muted-foreground)',
+                border: `1px solid ${filter === fam ? col + '80' : 'var(--sidebar-border)'}`,
               }}
             >
               {fam.charAt(0).toUpperCase() + fam.slice(1)}
@@ -64,10 +64,7 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
           const col = NUTRIENT_FAMILY_COLORS[family]
           return (
             <div key={family} className="mb-1">
-              <div
-                className="px-2 py-1 text-xs font-bold tracking-widest uppercase font-mono opacity-60"
-                style={{ color: col }}
-              >
+              <div className="px-2 py-1 text-xs font-bold tracking-widest uppercase font-mono text-muted-foreground">
                 {NUTRIENT_FAMILY_LABELS[family]}
               </div>
               {group.map(n => {
@@ -95,12 +92,12 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
                     {/* Name */}
                     <span
                       className="flex-1 text-xs font-sans font-medium truncate"
-                      style={{ color: isSelected ? col : 'rgba(232,234,246,0.75)' }}
+                      style={{ color: isSelected ? col : 'var(--foreground)' }}
                     >
                       {n.name}
                     </span>
                     {/* Stats */}
-                    <span className="text-xs font-mono opacity-40 flex-shrink-0">
+                    <span className="text-xs font-mono text-muted-foreground flex-shrink-0">
                       {linkCount}L
                     </span>
                   </button>
@@ -112,14 +109,14 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
       </div>
 
       {/* Legend */}
-      <div className="px-3 py-3 border-t space-y-2" style={{ borderColor: '#1a2a5a' }}>
-        <div className="text-xs opacity-40 uppercase tracking-wider font-mono mb-1">Legend</div>
+      <div className="px-3 py-3 border-t space-y-2" style={{ borderColor: 'var(--sidebar-border)' }}>
+        <div className="text-xs text-muted-foreground uppercase tracking-wider font-mono mb-1">Legend</div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
           {[
             { icon: '●', label: 'Nutrient' },
             { icon: '·', label: 'Dot size = amount' },
           ].map(({ icon, label }) => (
-            <div key={label} className="flex items-center gap-1 opacity-50">
+            <div key={label} className="flex items-center gap-1 text-muted-foreground">
               <span className="font-mono text-primary">{icon}</span>
               <span>{label}</span>
             </div>

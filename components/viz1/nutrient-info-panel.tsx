@@ -21,10 +21,10 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
   return (
     <div
       className="w-full h-full overflow-y-auto flex flex-col gap-3 p-4 font-sans"
-      style={{ background: 'rgba(10,15,46,0.95)', borderLeft: '1px solid #1a2a5a' }}
+      style={{ background: 'color-mix(in srgb, var(--sidebar) 95%, transparent)', borderLeft: '1px solid var(--sidebar-border)' }}
     >
       {/* Header */}
-      <div className="pb-3 border-b" style={{ borderColor: '#1a2a5a' }}>
+      <div className="pb-3 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-3 h-3 rounded-full" style={{ background: col, boxShadow: `0 0 8px ${col}` }} />
           <h2 className="font-bold text-base" style={{ color: col }}>{nutrient.name}</h2>
@@ -38,13 +38,13 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
       </div>
       {/* Top food sources */}
       <div>
-        <div className="text-xs font-bold uppercase tracking-wider opacity-50 font-mono mb-2">Top Food Sources <span className="text-xs font-mono lowercase tracking-wider opacity-70 font-mono mb-2">per 100g</span></div>
+        <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono mb-2">Top Food Sources <span className="text-xs font-mono lowercase tracking-wider text-muted-foreground font-mono mb-2">per 100g</span></div>
         <div className="space-y-1">
           {topFoods.map((food, i) => (
             <div
               key={`${food.id}-${i}`}
               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
-              style={{ background: '#0a1228', border: '1px solid #1a2a5a' }}
+              style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
             >
               <span
                 className="text-xs font-mono font-bold w-4 opacity-50"
@@ -54,7 +54,7 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
               </span>
               <span className="flex-1 text-xs font-medium text-foreground/80 truncate">{food.name}</span>
               <span className="text-xs font-mono font-bold flex-shrink-0" style={{ color: col }}>
-                {food.rawValue.toFixed(1) + ' '}<span className="opacity-50 font-normal">{food.unit}</span>
+                {food.rawValue.toFixed(1) + ' '}<span className="text-muted-foreground font-normal">{food.unit}</span>
               </span>
             </div>
           ))}
@@ -62,7 +62,7 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
       </div>
 
       {/* Hint */}
-      <div className="mt-auto text-xs opacity-30 font-mono text-center pt-2">
+      <div className="mt-auto text-xs text-muted-foreground font-mono text-center pt-2">
         Hover planets to reveal foods<br/>Double-click a planet to navigate
       </div>
     </div>

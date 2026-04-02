@@ -144,7 +144,7 @@ export function FoodSearch({ onAdd }: FoodSearchProps) {
                           ),
                         }))
                       }
-                      className="w-16 h-7 text-xs text-center px-1 bg-background border-border"
+                      className="w-16 h-7 text-xs text-center px-1 bg-background text-foreground border-border"
                       aria-label={`Grams for ${food.food_name}`}
                       onClick={(e) => e.stopPropagation()}
                     />
