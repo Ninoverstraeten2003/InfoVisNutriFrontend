@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { Wheat } from 'lucide-react'
 
 interface ProductionItem {
@@ -95,8 +96,8 @@ export function ParadoxCard({
                     borderRadius: '8px',
                     color: '#e5e5e5',
                   }}
-                  formatter={(value: number) => [
-                    `${(value / 1000).toFixed(0)}k tonnes`,
+                  formatter={(value: ValueType | undefined) => [
+                    `${(Number(value) / 1000).toFixed(0)}k tonnes`,
                     'Production',
                   ]}
                 />

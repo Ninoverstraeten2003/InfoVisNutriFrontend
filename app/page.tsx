@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { IconChartBar, IconHierarchy3 } from "@tabler/icons-react"
+import { IconChartBar, IconHierarchy3, IconMap } from "@tabler/icons-react"
 
 export default function Page() {
   return (
@@ -11,7 +11,7 @@ export default function Page() {
             Select a visualization dashboard to explore the API.
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2 mt-4 text-left">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4 text-left">
             <Link 
               href="/viz1" 
               className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/50 outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -35,6 +35,18 @@ export default function Page() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Rank top foods, analyze nutrient composition, and explore conflict-aware dietary choices.
+              </p>
+            </Link>
+            <Link 
+              href="/viz3" 
+              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/50 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <div className="flex items-center gap-2">
+                <IconMap className="text-primary" />
+                <h2 className="font-mono text-sm font-semibold tracking-wide uppercase">Viz 3 · World Missing</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Explore global micronutrient deficiencies on an interactive map with regional and country-level insights.
               </p>
             </Link>
           </div>
