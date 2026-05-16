@@ -29,12 +29,12 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="rounded-lg border border-[#444] bg-[#1a1a1a] p-3 shadow-xl">
-          <p className="font-semibold text-[#e5e5e5]">{payload[0].payload.region}</p>
-          <p className="text-sm text-[#a3a3a3]">
+        <div className="rounded-lg border border-border bg-card p-3 shadow-xl">
+          <p className="font-semibold text-foreground">{payload[0].payload.region}</p>
+          <p className="text-sm text-muted-foreground">
             Poverty: {payload[0].payload.poverty.toFixed(2)}%
           </p>
-          <p className="text-sm text-[#a3a3a3]">
+          <p className="text-sm text-muted-foreground">
             {indicator}: {payload[0].payload.deficiency.toFixed(2)}%
           </p>
         </div>
@@ -84,37 +84,37 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
           <div className="h-80">
             <ResponsiveContainer width="100%" height={320}>
               <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.5} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
                 <XAxis
                   type="number"
                   dataKey="poverty"
                   name="Poverty"
-                  stroke="#e5e5e5"
+                  stroke="#64748b"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fill: '#e5e5e5' }}
+                  tick={{ fill: '#64748b' }}
                   label={{
                     value: 'Poverty Rate (%)',
                     position: 'insideBottom',
                     offset: -5,
-                    style: { fill: '#e5e5e5' },
+                    style: { fill: '#64748b' },
                   }}
                 />
                 <YAxis
                   type="number"
                   dataKey="deficiency"
                   name={indicator}
-                  stroke="#e5e5e5"
+                  stroke="#64748b"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fill: '#e5e5e5' }}
+                  tick={{ fill: '#64748b' }}
                   label={{
                     value: `${indicator} Rate (%)`,
                     angle: -90,
                     position: 'insideLeft',
-                    style: { fill: '#e5e5e5' },
+                    style: { fill: '#64748b' },
                   }}
                 />
                 <ZAxis type="number" dataKey="size" range={[400, 400]} />

@@ -88,36 +88,36 @@ export function TrendCard({
         <div className="h-64">
           <ResponsiveContainer width="100%" height={256}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.5} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
               <XAxis
                 dataKey="year"
-                stroke="#e5e5e5"
+                stroke="#64748b"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
-                tick={{ fill: '#e5e5e5' }}
+                tick={{ fill: '#64748b' }}
                 tickFormatter={(value) => {
                   const idx = chartData.findIndex((d) => d.year === value)
                   return idx % 4 === 0 ? value : ''
                 }}
               />
               <YAxis
-                stroke="#e5e5e5"
+                stroke="#64748b"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#e5e5e5' }}
+                tick={{ fill: '#64748b' }}
                 tickFormatter={(value) => `${value}%`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1a1a1a',
-                  border: '1px solid #444',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '8px',
-                  color: '#e5e5e5',
+                  color: '#0f172a',
                 }}
-                labelStyle={{ color: '#e5e5e5' }}
+                labelStyle={{ color: '#0f172a' }}
               />
               <Line
                 type="monotone"

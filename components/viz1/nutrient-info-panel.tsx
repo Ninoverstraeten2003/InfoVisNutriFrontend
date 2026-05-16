@@ -45,15 +45,16 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
               key={`${food.id}-${i}`}
               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
               style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
+              title={food.name}
             >
               <span
-                className="text-xs font-mono font-bold w-4 opacity-50"
+                className="text-xs font-mono font-bold w-4 opacity-50 shrink-0"
                 style={{ color: col }}
               >
                 #{i + 1}
               </span>
-              <span className="flex-1 text-xs font-medium text-foreground/80 truncate">{food.name}</span>
-              <span className="text-xs font-mono font-bold flex-shrink-0" style={{ color: col }}>
+              <span className="flex-1 text-xs font-medium text-foreground/80 line-clamp-2 leading-tight">{food.name}</span>
+              <span className="text-xs font-mono font-bold shrink-0" style={{ color: col }}>
                 {food.rawValue.toFixed(1) + ' '}<span className="text-muted-foreground font-normal">{food.unit}</span>
               </span>
             </div>

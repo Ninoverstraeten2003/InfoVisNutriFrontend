@@ -124,8 +124,8 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/20 bg-accent/10">
-              <span className="text-lg font-bold text-accent">N</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-muted/20">
+              <span className="text-lg font-bold text-foreground">N</span>
             </div>
             <div>
               <h1 className="text-sm font-semibold text-foreground">Nutriverse</h1>

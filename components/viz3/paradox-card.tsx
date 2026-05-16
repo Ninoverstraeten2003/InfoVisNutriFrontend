@@ -77,32 +77,32 @@ export function ParadoxCard({
           <div className="h-96">
             <ResponsiveContainer width="100%" height={384}>
               <BarChart data={topProduction} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.5} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
                 <XAxis
                   type="number"
-                  stroke="#e5e5e5"
+                  stroke="#64748b"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                  tick={{ fill: '#e5e5e5' }}
+                  tick={{ fill: '#64748b' }}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  stroke="#e5e5e5"
+                  stroke="#64748b"
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
                   width={120}
-                  tick={{ fill: '#e5e5e5' }}
+                  tick={{ fill: '#64748b' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: '1px solid #444',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
                     borderRadius: '8px',
-                    color: '#e5e5e5',
+                    color: '#0f172a',
                   }}
                   formatter={(value: ValueType | undefined) => [
                     `${(Number(value) / 1000).toFixed(0)}k tonnes`,

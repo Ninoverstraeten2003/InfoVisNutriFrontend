@@ -45,7 +45,7 @@ const SUN_RADIUS = 48
 const ORBIT_RADIUS_BASE = 200
 const ORBIT_RADIUS_STEP = 40
 const FOOD_ORBIT_RADIUS = 38
-const PARTICLE_SPEED = 0.004
+const PARTICLE_SPEED = 0.0015
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -219,7 +219,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
         ctx.fill()
         const glow = ctx.createRadialGradient(px, py, 0, px, py, 8)
         glow.addColorStop(0, hexToRgba(col, 0.4))
-        glow.addColorStop(1, 'rgba(0,0,0,0)')
+        glow.addColorStop(1, hexToRgba(col, 0))
         ctx.beginPath()
         ctx.arc(px, py, 8, 0, Math.PI * 2)
         ctx.fillStyle = glow
@@ -249,7 +249,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
         const maxAmt = Math.max(...foods.map(f => f.rawValue), 1)
 
         foods.forEach((food, fi) => {
-          const foodAngle = (fi / foods.length) * Math.PI * 2 + t * 0.005
+          const foodAngle = (fi / foods.length) * Math.PI * 2 + t * 0.0015
           const foodDist = FOOD_ORBIT_RADIUS + node.radius + 10
           const fx = nx + Math.cos(foodAngle) * foodDist * ease
           const fy = ny + Math.sin(foodAngle) * foodDist * ease
@@ -259,7 +259,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
           // Glow
           const glow = ctx.createRadialGradient(fx, fy, 0, fx, fy, fRadius * 2.5)
           glow.addColorStop(0, hexToRgba(col, 0.4 * ease))
-          glow.addColorStop(1, 'rgba(0,0,0,0)')
+          glow.addColorStop(1, hexToRgba(col, 0))
           ctx.beginPath()
           ctx.arc(fx, fy, fRadius * 2.5, 0, Math.PI * 2)
           ctx.fillStyle = glow
@@ -284,7 +284,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
                   : food.name.split(',')[0];
 
               ctx.font = `bold 9px "Space Mono", monospace`;
-              ctx.fillStyle = `rgba(232,234,246,${ease * 0.9})`;
+              ctx.fillStyle = `rgba(15,23,42,${ease * 0.9})`; // Dark color for light mode contrast
               ctx.textAlign = 'center';
               
               // Draw truncated name
@@ -314,7 +314,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
       const outerGlow = ctx.createRadialGradient(nx, ny, 0, nx, ny, glowR)
       outerGlow.addColorStop(0, hexToRgba(col, isHovered ? 0.4 : 0.15))
       outerGlow.addColorStop(0.5, hexToRgba(col, isHovered ? 0.15 : 0.05))
-      outerGlow.addColorStop(1, 'rgba(0,0,0,0)')
+      outerGlow.addColorStop(1, hexToRgba(col, 0))
       ctx.beginPath()
       ctx.arc(nx, ny, glowR, 0, Math.PI * 2)
       ctx.fillStyle = outerGlow
@@ -343,7 +343,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
       ctx.font = `bold ${Math.max(8, r * 0.55)}px "Space Grotesk", sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = '#0f172a' // Dark color for light mode contrast on pastel planets
       ctx.fillText(node.nutrient.shortName, nx, ny)
     })
 
@@ -351,11 +351,13 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
     const pulse = 1 + Math.sin(t * 0.04) * 0.03
     const sunR = SUN_RADIUS * pulse
 
+    const centerCol = NUTRIENT_FAMILY_COLORS[selectedNutrient.family]
+
     // Corona layers
     ;[4.0, 2.8, 1.8].forEach((factor, i) => {
       const coronaGrad = ctx.createRadialGradient(cx, cy, sunR * 0.5, cx, cy, sunR * factor)
-      coronaGrad.addColorStop(0, `rgba(255, 245, 157, ${[0.08, 0.12, 0.18][i]})`)
-      coronaGrad.addColorStop(1, 'rgba(255, 179, 0, 0)')
+      coronaGrad.addColorStop(0, hexToRgba(centerCol, [0.08, 0.12, 0.18][i]))
+      coronaGrad.addColorStop(1, hexToRgba(centerCol, 0))
       ctx.beginPath()
       ctx.arc(cx, cy, sunR * factor, 0, Math.PI * 2)
       ctx.fillStyle = coronaGrad
@@ -364,10 +366,10 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
 
     // Sun body
     const sunGrad = ctx.createRadialGradient(cx - sunR * 0.3, cy - sunR * 0.3, sunR * 0.05, cx, cy, sunR)
-    sunGrad.addColorStop(0, '#fffde7')
-    sunGrad.addColorStop(0.4, '#fff59d')
-    sunGrad.addColorStop(0.75, '#ffb300')
-    sunGrad.addColorStop(1, '#e65100')
+    sunGrad.addColorStop(0, '#ffffff')
+    sunGrad.addColorStop(0.3, hexToRgba(centerCol, 0.9))
+    sunGrad.addColorStop(0.75, hexToRgba(centerCol, 0.7))
+    sunGrad.addColorStop(1, hexToRgba(centerCol, 0.4))
     ctx.beginPath()
     ctx.arc(cx, cy, sunR, 0, Math.PI * 2)
     ctx.fillStyle = sunGrad
@@ -482,7 +484,7 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
       <div className="absolute top-4 right-4 z-50">
         <button
           onClick={togglePause}
-          className="rounded-full bg-background/50 border border-border px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-accent/20 hover:text-accent"
+          className="rounded-full bg-background/80 border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground"
         >
           {isPaused ? "Play Animation" : "Pause Animation"}
         </button>
