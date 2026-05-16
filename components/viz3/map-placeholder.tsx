@@ -13,7 +13,7 @@ interface MapPlaceholderProps {
 }
 
 export function getDeficiencyColor(rate: number | null | undefined): string {
-  if (rate === null || rate === undefined) return 'oklch(0.25 0 0)'
+  if (rate === null || rate === undefined) return 'oklch(0.92 0 0)'
   if (rate < 10) return 'oklch(0.60 0.15 250)'
   if (rate < 20) return 'oklch(0.65 0.18 200)'
   if (rate < 30) return 'oklch(0.68 0.18 60)'
@@ -48,13 +48,13 @@ export function MapPlaceholder({ data, selectedIso3, onCountryClick }: MapPlaceh
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={isSelected ? 'oklch(0.98 0 0)' : getCountryColor(numericId)}
-                    stroke="oklch(0.12 0 0)"
+                    fill={isSelected ? 'oklch(0.2 0 0)' : getCountryColor(numericId)}
+                    stroke="oklch(1 0 0)"
                     strokeWidth={0.5}
                     style={{
                       default: { outline: 'none' },
                       hover: {
-                        fill: 'oklch(0.85 0.10 220)',
+                        fill: 'oklch(0.4 0 0)',
                         outline: 'none',
                         cursor: 'pointer',
                       },
