@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Loader2, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -50,19 +50,28 @@ export default function MealBuilderPage() {
     setMealItems((prev) =>
       prev.map((i) => (i.food_id === food_id ? { ...i, grams } : i))
     );
-    setResults(null);
   }, []);
 
-  const handleAnalyze = async () => {
-    if (mealItems.length === 0) return;
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleAnalyze = useCallback(async () => {
+    if (mealItems.length === 0) {
+      setResults(null);
+      return;
+    }
     setLoading(true);
     setError(null);
-    setResults(null);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
 
     try {
       const payload = {
         meal_items: mealItems.map((item) => ({
           food_id: item.food_id,
+          food_name: item.food_name,
           grams: item.grams,
         })),
         ...demographics,
@@ -72,6 +81,7 @@ export default function MealBuilderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!res.ok) {
@@ -81,12 +91,21 @@ export default function MealBuilderPage() {
 
       const data = await res.json();
       setResults(Array.isArray(data) ? data : data.results ?? []);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : "Something went wrong");
+      setResults(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [mealItems, demographics]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleAnalyze();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [handleAnalyze]);
 
   const canAnalyze = mealItems.length > 0 && !loading;
 
@@ -194,31 +213,7 @@ export default function MealBuilderPage() {
               )}
             </section>
 
-            {/* Analyze CTA */}
-            <Button
-              onClick={handleAnalyze}
-              disabled={!canAnalyze}
-              className="w-full h-11 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
-              aria-label="Analyze meal nutrition"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analysing...
-                </>
-              ) : (
-                <>
-                  <FlaskConical className="mr-2 h-4 w-4" />
-                  Analyse Nutrition
-                  {mealItems.length > 0 && (
-                    <span className="ml-2 opacity-70 text-xs font-normal">
-                      ({mealItems.length} food
-                      {mealItems.length !== 1 ? "s" : ""})
-                    </span>
-                  )}
-                </>
-              )}
-            </Button>
+            {/* Analyze CTA removed as it is now live */}
 
             {error && (
               <p
@@ -276,9 +271,9 @@ function EmptyResultsState({ hasFoods }: { hasFoods: boolean }) {
           {hasFoods ? "Ready to Analyse" : "Start Building Your Meal"}
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs text-balance">
-          {hasFoods
-            ? "Click Analyse Nutrition to see your full EFSA nutrient breakdown."
-            : "Search for foods on the left, add them to your tray, then click Analyse Nutrition."}
+            {hasFoods
+              ? "Loading your personalised EFSA nutrient breakdown..."
+              : "Search for foods on the left and add them to your tray."}
         </p>
       </div>
       {!hasFoods && (

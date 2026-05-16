@@ -62,6 +62,8 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number>(0)
   const tickRef = useRef(0)
+  const isPausedRef = useRef(false)
+  const [isPaused, setIsPaused] = useState(false)
   const starsRef = useRef<Array<{ x: number; y: number; r: number; op: number; speed: number }>>([])
   const hoveredPlanetRef = useRef<string | null>(null)
   const hoveredFoodRef = useRef<string | null>(null)
@@ -157,7 +159,9 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
 
     const cx = w / 2
     const cy = h / 2
-    tickRef.current += 1
+    if (!isPausedRef.current) {
+      tickRef.current += 1
+    }
     const t = tickRef.current
 
     // Clear background
@@ -467,8 +471,22 @@ export default function CosmosGraph({ nutrients, selectedNutrientId, onSelectNut
     setTooltip(null)
   }, [])
 
+  const togglePause = useCallback(() => {
+    const p = !isPaused
+    setIsPaused(p)
+    isPausedRef.current = p
+  }, [isPaused])
+
   return (
     <div className="relative w-full h-full">
+      <div className="absolute top-4 right-4 z-50">
+        <button
+          onClick={togglePause}
+          className="rounded-full bg-background/50 border border-border px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-accent/20 hover:text-accent"
+        >
+          {isPaused ? "Play Animation" : "Pause Animation"}
+        </button>
+      </div>
       <canvas
         ref={canvasRef}
         className="w-full h-full block"

@@ -13,7 +13,9 @@ interface TrendCardProps {
   trackStatus: string
   povertyRate: number | null
   povertyYear: number | null
+  povertyThreshold?: string | null
   trendData: Record<string, number>
+  themeColor?: string
 }
 
 export function TrendCard({
@@ -24,7 +26,9 @@ export function TrendCard({
   trackStatus,
   povertyRate,
   povertyYear,
+  povertyThreshold,
   trendData,
+  themeColor = 'var(--destructive)',
 }: TrendCardProps) {
   const chartData = Object.entries(trendData).map(([year, value]) => ({
     year,
@@ -33,7 +37,7 @@ export function TrendCard({
 
   const getStatusColor = (status: string) => {
     if (status.toLowerCase().includes('on course') || status.toLowerCase().includes('progress')) {
-      return 'bg-green-500/10 text-green-400 border-green-500/20'
+      return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
     }
     return 'bg-destructive/10 text-destructive border-destructive/20'
   }
@@ -54,20 +58,20 @@ export function TrendCard({
           <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-background/50 px-4 py-3">
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">Current Rate</span>
-              <span className="text-2xl font-bold text-destructive">
+              <span className="text-2xl font-bold" style={{ color: themeColor }}>
                 {latestValue.toFixed(1)}%
               </span>
             </div>
             {trend ? (
-              <TrendingUp className="h-5 w-5 text-destructive" />
+              <TrendingUp className="h-5 w-5" style={{ color: themeColor }} />
             ) : (
-              <TrendingDown className="h-5 w-5 text-green-400" />
+              <TrendingDown className="h-5 w-5 text-emerald-500" />
             )}
           </div>
           
           {povertyRate !== null && (
             <div className="flex flex-col rounded-xl border border-border/50 bg-background/50 px-4 py-3">
-              <span className="text-xs text-muted-foreground">Poverty ($1.90/day)</span>
+              <span className="text-xs text-muted-foreground">Extreme Poverty (World Bank ${povertyThreshold || '1.90'}/day)</span>
               <span className="text-2xl font-bold">
                 {povertyRate.toFixed(1)}%
               </span>
@@ -118,10 +122,10 @@ export function TrendCard({
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#f97316"
+                stroke={themeColor}
                 strokeWidth={3}
                 dot={false}
-                activeDot={{ r: 6, fill: '#f97316' }}
+                activeDot={{ r: 6, fill: themeColor }}
               />
             </LineChart>
           </ResponsiveContainer>

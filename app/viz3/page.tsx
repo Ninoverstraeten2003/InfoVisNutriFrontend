@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapPlaceholder } from '@/components/viz3/map-placeholder'
+import { MapPlaceholder, getDeficiencyColor } from '@/components/viz3/map-placeholder'
 import { TrendCard } from '@/components/viz3/trend-card'
 import { ParadoxCard } from '@/components/viz3/paradox-card'
 import { RegionalDivideCard } from '@/components/viz3/regional-divide-card'
@@ -152,38 +152,23 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Left Side - Sticky Map */}
-        <div className="hidden w-1/2 lg:block">
-          <div className="sticky top-16 h-[calc(100vh-4rem)] p-6">
-            <MapPlaceholder 
-              data={mapData}
-              selectedIso3={selectedCountry}
-              onCountryClick={(iso3) => {
-                if (iso3) setSelectedCountry(iso3)
-              }}
-            />
-          </div>
+      <div className="flex flex-col gap-6 p-6">
+        {/* Map Section - Top */}
+        <div className="w-full h-96 lg:h-[500px]">
+          <MapPlaceholder 
+            data={mapData}
+            selectedIso3={selectedCountry}
+            onCountryClick={(iso3) => {
+              if (iso3) setSelectedCountry(iso3)
+            }}
+          />
         </div>
 
-        {/* Right Side - Scrollable Content */}
-        <div className="w-full lg:w-1/2">
-          <div className="space-y-6 p-6">
-            {/* Mobile Map - shown only on smaller screens */}
-            <div className="lg:hidden">
-              <div className="h-96">
-                <MapPlaceholder 
-                  data={mapData}
-                  selectedIso3={selectedCountry}
-                  onCountryClick={(iso3) => {
-                    if (iso3) setSelectedCountry(iso3)
-                  }}
-                />
-              </div>
-            </div>
-
+        {/* Content Section - Bottom */}
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="space-y-6">
             {loading ? (
-              <div className="flex h-96 items-center justify-center">
+              <div className="flex h-64 items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                   <Loader2 className="h-12 w-12 animate-spin text-accent" />
                   <p className="text-sm text-muted-foreground">Loading data...</p>
@@ -199,9 +184,11 @@ export default function HomePage() {
                     latestValue={countryData.latest_value}
                     latestYear={countryData.latest_year}
                     trackStatus={countryData.track_status}
-                    povertyRate={countryData.poverty_190}
-                    povertyYear={countryData.poverty_190_year}
+                    povertyRate={countryData.poverty_190 ?? countryData.poverty_320 ?? null}
+                    povertyYear={countryData.poverty_190 ? countryData.poverty_190_year : (countryData.poverty_320 ? countryData.poverty_320_year : null)}
+                    povertyThreshold={countryData.poverty_190 ? '1.90' : (countryData.poverty_320 ? '3.20' : null)}
                     trendData={countryData.trend_data}
+                    themeColor={getDeficiencyColor(countryData.latest_value)}
                   />
                 </div>
 
@@ -213,6 +200,7 @@ export default function HomePage() {
                       indicator={indicator}
                       deficiencyRate={countryData.latest_value}
                       productionData={countryData.production_data}
+                      themeColor={getDeficiencyColor(countryData.latest_value)}
                     />
                   </div>
                 )}
@@ -226,14 +214,14 @@ export default function HomePage() {
 
               </>
             ) : (
-              <div className="flex h-96 flex-col items-center justify-center gap-2">
+              <div className="flex h-64 flex-col items-center justify-center gap-2">
                 <p className="text-muted-foreground">No data available for the selected indicator in this country.</p>
               </div>
             )}
 
             {/* Country Selector - Always visible when not loading so users can recover from empty data states */}
             {!loading && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 pb-10">
                 <div className="rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-xl">
                   <h3 className="mb-4 text-lg font-semibold">Explore Other Countries</h3>
                   <div className="flex gap-2">

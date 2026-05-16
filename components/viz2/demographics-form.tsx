@@ -1,5 +1,6 @@
-"use client";
-
+import { useState, useEffect } from "react";
+import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,58 +26,92 @@ const ACTIVITY_LEVELS: { value: Demographics["activity_level"]; label: string; d
 ];
 
 export function DemographicsForm({ value, onChange }: DemographicsFormProps) {
+  const [localAge, setLocalAge] = useState(value.age.toString());
+  const [localWeight, setLocalWeight] = useState(value.weight_kg.toString());
+
+  useEffect(() => {
+    setLocalAge(value.age.toString());
+  }, [value.age]);
+
+  useEffect(() => {
+    setLocalWeight(value.weight_kg.toString());
+  }, [value.weight_kg]);
+
   const update = <K extends keyof Demographics>(key: K, val: Demographics[K]) =>
     onChange({ ...value, [key]: val });
+
+  const handleAgeChange = (val: string) => {
+    setLocalAge(val);
+    const parsed = parseInt(val);
+    if (!isNaN(parsed) && parsed > 0) update("age", parsed);
+  };
+
+  const handleWeightChange = (val: string) => {
+    setLocalWeight(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && parsed > 0) update("weight_kg", parsed);
+  };
+
+  const stepAge = (step: number) => {
+    const next = Math.max(1, value.age + step);
+    update("age", next);
+  };
+
+  const stepWeight = (step: number) => {
+    const next = Math.max(10, value.weight_kg + step);
+    update("weight_kg", next);
+  };
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-1.5">
         <Label htmlFor="age" className="text-sm font-medium text-foreground">
-          Age
+          Age (yrs)
         </Label>
-        <div className="relative">
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => stepAge(-1)}>
+            <Minus className="h-4 w-4" />
+          </Button>
           <Input
             id="age"
             type="number"
             min={1}
             max={120}
-            value={value.age}
-            onChange={(e) =>
-              update("age", Math.max(1, parseInt(e.target.value) || 1))
-            }
-            className="pr-10 bg-card border-border focus-visible:ring-primary"
+            value={localAge}
+            onChange={(e) => handleAgeChange(e.target.value)}
+            onBlur={() => setLocalAge(value.age.toString())}
+            className="bg-card text-center border-border focus-visible:ring-primary px-1"
             aria-label="Age in years"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            yrs
-          </span>
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => stepAge(1)}>
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="weight" className="text-sm font-medium text-foreground">
-          Weight
+          Weight (kg)
         </Label>
-        <div className="relative">
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => stepWeight(-1)}>
+            <Minus className="h-4 w-4" />
+          </Button>
           <Input
             id="weight"
             type="number"
             min={10}
             max={500}
             step={0.5}
-            value={value.weight_kg}
-            onChange={(e) =>
-              update(
-                "weight_kg",
-                Math.max(10, parseFloat(e.target.value) || 10)
-              )
-            }
-            className="pr-8 bg-card border-border focus-visible:ring-primary"
+            value={localWeight}
+            onChange={(e) => handleWeightChange(e.target.value)}
+            onBlur={() => setLocalWeight(value.weight_kg.toString())}
+            className="bg-card text-center border-border focus-visible:ring-primary px-1"
             aria-label="Weight in kilograms"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            kg
-          </span>
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => stepWeight(1)}>
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 

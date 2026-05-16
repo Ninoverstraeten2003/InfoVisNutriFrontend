@@ -12,17 +12,18 @@ interface MapPlaceholderProps {
   onCountryClick?: (iso3: string) => void
 }
 
+export function getDeficiencyColor(rate: number | null | undefined): string {
+  if (rate === null || rate === undefined) return 'oklch(0.25 0 0)'
+  if (rate < 10) return 'oklch(0.60 0.15 250)'
+  if (rate < 20) return 'oklch(0.65 0.18 200)'
+  if (rate < 30) return 'oklch(0.68 0.18 60)'
+  if (rate < 40) return 'oklch(0.70 0.20 30)'
+  return 'oklch(0.75 0.22 12)'
+}
+
 export function MapPlaceholder({ data, selectedIso3, onCountryClick }: MapPlaceholderProps) {
   const getCountryColor = (countryId: string) => {
-    const rate = data[countryId]
-    if (!rate) return 'oklch(0.25 0 0)'
-    
-    // Color scale from low (blue) to high (crimson accent) - brighter for visibility
-    if (rate < 10) return 'oklch(0.60 0.15 250)'
-    if (rate < 20) return 'oklch(0.65 0.18 200)'
-    if (rate < 30) return 'oklch(0.68 0.18 60)'
-    if (rate < 40) return 'oklch(0.70 0.20 30)'
-    return 'oklch(0.75 0.22 12)' // High deficiency - bright accent color
+    return getDeficiencyColor(data[countryId])
   }
 
   return (

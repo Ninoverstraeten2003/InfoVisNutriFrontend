@@ -1,8 +1,9 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from 'recharts'
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis, Cell } from 'recharts'
 import { Globe2 } from 'lucide-react'
+import { getDeficiencyColor } from '@/components/viz3/map-placeholder'
 
 interface RegionalData {
   region: string
@@ -46,8 +47,8 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
     <Card className="border-border/50 bg-card/80 backdrop-blur-xl">
       <CardHeader className="space-y-4">
         <div className="flex items-start gap-4">
-          <div className="rounded-xl border border-chart-2/20 bg-chart-2/10 p-3">
-            <Globe2 className="h-6 w-6 text-chart-2" />
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+            <Globe2 className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="space-y-2 flex-1">
             <CardTitle className="text-3xl font-bold text-balance">The Global Divide</CardTitle>
@@ -65,7 +66,7 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
             >
               <div className="text-xs text-muted-foreground mb-1">{region.region}</div>
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold text-destructive">
+                <span className="text-lg font-bold" style={{ color: getDeficiencyColor(region.latest_deficiency_value) }}>
                   {region.latest_deficiency_value.toFixed(1)}%
                 </span>
                 <span className="text-xs text-muted-foreground">{indicator}</span>
@@ -118,13 +119,16 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
                 />
                 <ZAxis type="number" dataKey="size" range={[400, 400]} />
                 <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter
-                  data={chartData}
-                  fill="#f97316"
-                  fillOpacity={0.7}
-                  stroke="#f97316"
-                  strokeWidth={2}
-                />
+                <Scatter data={chartData} strokeWidth={2}>
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={getDeficiencyColor(entry.deficiency)}
+                      stroke={getDeficiencyColor(entry.deficiency)}
+                      fillOpacity={0.7}
+                    />
+                  ))}
+                </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -138,7 +142,7 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
                 <div className="text-xs text-muted-foreground mb-1 line-clamp-1" title={region.region}>
                   {region.region}
                 </div>
-                <div className="text-sm font-semibold text-destructive">
+                <div className="text-sm font-semibold" style={{ color: getDeficiencyColor(region.latest_deficiency_value) }}>
                   {region.latest_deficiency_value.toFixed(1)}%
                 </div>
               </div>

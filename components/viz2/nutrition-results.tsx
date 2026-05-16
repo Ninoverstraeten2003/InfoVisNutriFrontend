@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { NutrientResult } from "@/lib/types";
+import { Plus, Minus, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 interface NutritionResultsProps {
   results: NutrientResult[];
@@ -31,7 +34,16 @@ function getTextColor(pct: number): string {
   return "text-[oklch(0.65_0.18_25)]";
 }
 
+function formatNumber(val: number): string {
+  if (val === 0) return "0.0";
+  if (val < 0.1) return val.toFixed(2);
+  if (val >= 100) return val.toFixed(0);
+  return val.toFixed(1);
+}
+
 function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
+  const [expanded, setExpanded] = useState(false);
+
   const consumed = nutrient.consumed_value ?? 0;
   const hasTarget = nutrient.target_value !== null;
   const target = nutrient.target_value ?? 0;
@@ -39,50 +51,91 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
   const pct = Math.min(displayPct, 150);
 
   return (
-    <div className="space-y-1.5 py-2.5 border-b border-border/50 last:border-0">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-foreground leading-tight">
-          {nutrient.nutrient_name}
-        </span>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {consumed.toFixed(1)}{" "}
-            {hasTarget ? (
-              <span className="text-muted-foreground/70">
-                / {target.toFixed(1)} {nutrient.unit}
-              </span>
-            ) : (
-              <span className="text-muted-foreground/70">{nutrient.unit}</span>
-            )}
-          </span>
-          {hasTarget && (
-            <span
-              className={cn(
-                "text-xs font-bold tabular-nums w-12 text-right",
-                getTextColor(displayPct)
-              )}
+    <div className="py-2.5 border-b border-border/50 last:border-0">
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setExpanded(!expanded)} 
+              className="h-5 w-5 rounded hover:bg-accent/20 flex items-center justify-center text-muted-foreground transition-colors"
+              aria-label={expanded ? "Hide breakdown" : "Show breakdown"}
             >
-              {displayPct.toFixed(0)}%
+              {expanded ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+            </button>
+            <span className="text-sm font-medium text-foreground leading-tight">
+              {nutrient.nutrient_name}
             </span>
-          )}
-        </div>
-      </div>
-      {hasTarget && (
-        <div
-          className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
-          role="progressbar"
-          aria-valuenow={Math.round(displayPct)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${nutrient.nutrient_name}: ${displayPct.toFixed(0)}% of daily target`}
-        >
-          <div
-            className={cn(
-              "h-full rounded-full transition-all duration-500",
-              getBarColor(displayPct)
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {formatNumber(consumed)}{" "}
+              {hasTarget ? (
+                <span className="text-muted-foreground/70">
+                  / {formatNumber(target)} {nutrient.unit}
+                </span>
+              ) : (
+                <span className="text-muted-foreground/70">{nutrient.unit}</span>
+              )}
+            </span>
+            {hasTarget && (
+              <span
+                className={cn(
+                  "text-xs font-bold tabular-nums w-12 text-right",
+                  getTextColor(displayPct)
+                )}
+              >
+                {displayPct.toFixed(0)}%
+              </span>
             )}
-            style={{ width: `${Math.min(pct, 100)}%` }}
-          />
+          </div>
+        </div>
+        {hasTarget && (
+          <div className="pl-7 mt-1.5">
+            <div
+              className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(displayPct)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${nutrient.nutrient_name}: ${displayPct.toFixed(0)}% of daily target`}
+            >
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  getBarColor(displayPct)
+                )}
+                style={{ width: `${Math.min(pct, 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {expanded && (
+        <div className="mt-3 ml-7 space-y-2 animate-in slide-in-from-top-1 fade-in duration-200">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+            Top Sources in Meal
+          </div>
+          {nutrient.breakdown && nutrient.breakdown.length > 0 ? (
+            nutrient.breakdown.map((b) => (
+              <div key={b.food_id} className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">{b.food_name}</span>
+                <span className="font-mono">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-xs text-muted-foreground italic">No significant sources</div>
+          )}
+          
+          <div className="pt-2 mt-2 border-t border-border/50">
+            <Link 
+              href={`/viz1?nutrient=${encodeURIComponent(nutrient.nutrient_name)}`}
+              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 w-max transition-colors"
+            >
+              Learn more in Cosmos Graph
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
       )}
     </div>

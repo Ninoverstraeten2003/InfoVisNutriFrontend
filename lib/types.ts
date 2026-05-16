@@ -64,6 +64,11 @@ export interface NutrientResult {
   target_value: number;
   unit: string;
   percentage_met: number;
+  breakdown?: {
+    food_id: number;
+    food_name: string;
+    consumed_value: number;
+  }[];
 }
 
 export type NutritionResults = NutrientResult[];

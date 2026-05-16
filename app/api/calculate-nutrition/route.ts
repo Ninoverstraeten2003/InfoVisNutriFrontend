@@ -38,20 +38,49 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
+    const totalRes = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(postgrestPayload),
     });
-    if (!res.ok) {
-      const text = await res.text();
+    if (!totalRes.ok) {
+      const text = await totalRes.text();
       return NextResponse.json(
-        { error: `Upstream error: ${res.status}`, detail: text },
-        { status: res.status }
+        { error: `Upstream error: ${totalRes.status}`, detail: text },
+        { status: totalRes.status }
       );
     }
-    const data = await res.json();
-    return NextResponse.json(data);
+    const totalData = await totalRes.json();
+
+    // Fetch individual breakdowns
+    const itemDataPromises = body.meal_items.map(async (item: any) => {
+      const itemPayload = { 
+        ...postgrestPayload, 
+        p_food_items: [{ food_id: item.food_id, amount_g: item.grams }] 
+      };
+      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(itemPayload) });
+      const data = res.ok ? await res.json() : [];
+      return { food_id: item.food_id, food_name: item.food_name, data };
+    });
+
+    const itemsData = await Promise.all(itemDataPromises);
+
+    const enrichedData = totalData.map((nutrient: any) => {
+      const breakdown = itemsData.map(item => {
+        const itemNutrient = item.data.find((n: any) => n.nutrient_name === nutrient.nutrient_name);
+        return {
+          food_id: item.food_id,
+          food_name: item.food_name,
+          consumed_value: itemNutrient?.consumed_value || 0
+        };
+      }).filter(b => b.consumed_value > 0);
+      
+      breakdown.sort((a, b) => b.consumed_value - a.consumed_value);
+      
+      return { ...nutrient, breakdown };
+    });
+
+    return NextResponse.json(enrichedData);
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to calculate nutrition", detail: String(err) },

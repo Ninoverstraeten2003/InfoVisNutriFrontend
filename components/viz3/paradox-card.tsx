@@ -17,6 +17,7 @@ interface ParadoxCardProps {
   indicator: string
   deficiencyRate: number
   productionData: ProductionItem[]
+  themeColor?: string
 }
 
 export function ParadoxCard({
@@ -24,6 +25,7 @@ export function ParadoxCard({
   indicator,
   deficiencyRate,
   productionData,
+  themeColor = 'var(--destructive)',
 }: ParadoxCardProps) {
   const topProduction = productionData
     .slice(0, 10)
@@ -37,8 +39,8 @@ export function ParadoxCard({
     <Card className="border-border/50 bg-card/80 backdrop-blur-xl">
       <CardHeader className="space-y-4">
         <div className="flex items-start gap-4">
-          <div className="rounded-xl border border-accent/20 bg-accent/10 p-3">
-            <Wheat className="h-6 w-6 text-accent" />
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+            <Wheat className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="space-y-2 flex-1">
             <CardTitle className="text-3xl font-bold text-balance">The Production Paradox</CardTitle>
@@ -48,7 +50,13 @@ export function ParadoxCard({
           </div>
         </div>
 
-        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+        <div 
+          className="rounded-xl border p-4"
+          style={{ 
+            borderColor: `color-mix(in srgb, ${themeColor} 20%, transparent)`,
+            backgroundColor: `color-mix(in srgb, ${themeColor} 5%, transparent)`
+          }}
+        >
           <div className="flex items-baseline gap-2">
             <span className="text-sm text-muted-foreground">Despite producing</span>
             <span className="text-2xl font-bold text-foreground">
@@ -57,7 +65,7 @@ export function ParadoxCard({
             <span className="text-sm text-muted-foreground">tonnes of food,</span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-destructive">{deficiencyRate}%</span>
+            <span className="text-3xl font-bold" style={{ color: themeColor }}>{deficiencyRate}%</span>
             <span className="text-sm text-muted-foreground">still suffer from {indicator}</span>
           </div>
         </div>
@@ -103,7 +111,7 @@ export function ParadoxCard({
                 />
                 <Bar
                   dataKey="tonnes"
-                  fill="#60a5fa"
+                  fill={themeColor}
                   radius={[0, 8, 8, 0]}
                   maxBarSize={32}
                 />
