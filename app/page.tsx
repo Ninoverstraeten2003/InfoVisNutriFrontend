@@ -21,7 +21,7 @@ export default function Page() {
                 <h2 className="font-mono text-sm font-semibold tracking-wide uppercase">Viz 1 · Nutrient Cosmos</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                Explore the network graph of nutrient relationships, find top anchors and degree leaders.
+                A force-directed cosmic network mapping biochemical relations. Planets represent nutrients, while their moons show the top 10 nutrient-dense foods.
               </p>
             </Link>
 
@@ -34,7 +34,7 @@ export default function Page() {
                 <h2 className="font-mono text-sm font-semibold tracking-wide uppercase">Viz 2 · Perfect Plate</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                Rank top foods, analyze nutrient composition, and explore conflict-aware dietary choices.
+                Personalized dietary tracking based on your demographics. See how your meal dynamically fulfills EFSA recommended intakes in real-time.
               </p>
             </Link>
             <Link 
@@ -46,7 +46,7 @@ export default function Page() {
                 <h2 className="font-mono text-sm font-semibold tracking-wide uppercase">Viz 3 · World Missing</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                Explore global micronutrient deficiencies on an interactive map with regional and country-level insights.
+                Explore global deficiencies via maps and charts. Discover the "production paradox"—where high food production doesn't guarantee nutritional security.
               </p>
             </Link>
           </div>
