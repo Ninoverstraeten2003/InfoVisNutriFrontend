@@ -2,8 +2,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
+import { TrendingUp, TrendingDown, Info } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface TrendCardProps {
   countryName: string
@@ -71,7 +72,21 @@ export function TrendCard({
           
           {povertyRate !== null && (
             <div className="flex flex-col rounded-xl border border-border/50 bg-background/50 px-4 py-3">
-              <span className="text-xs text-muted-foreground">Extreme Poverty (World Bank ${povertyThreshold || '1.90'}/day)</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                Extreme Poverty (World Bank ${povertyThreshold || '1.90'}/day)
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 cursor-help opacity-70 hover:opacity-100 transition-opacity" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[280px]">
+                      <p className="text-xs font-normal">
+                        This threshold (${povertyThreshold || '1.90'} 2011 PPP) is the official international poverty line defined by the World Bank. The data is sourced directly from their Poverty and Inequality Platform (PIP).
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
               <span className="text-2xl font-bold">
                 {povertyRate.toFixed(1)}%
               </span>
@@ -110,7 +125,7 @@ export function TrendCard({
                 tick={{ fill: '#64748b' }}
                 tickFormatter={(value) => `${value}%`}
               />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #e2e8f0',

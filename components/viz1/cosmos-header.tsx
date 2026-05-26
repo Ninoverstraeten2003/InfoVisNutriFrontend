@@ -1,6 +1,9 @@
 'use client'
 
 import { Nutrient, NUTRIENT_FAMILY_COLORS } from '@/lib/viz1-cosmos-model'
+import { Home } from 'lucide-react'
+import Link from 'next/link'
+import { IconHierarchy3 } from "@tabler/icons-react"
 
 interface Props {
   nutrients: Nutrient[]
@@ -11,16 +14,23 @@ interface Props {
 export default function CosmosHeader({ nutrients, history, onNavigate }: Props) {
   return (
     <header
-      className="flex items-center px-4 h-11 gap-2 flex-shrink-0"
+      className="flex items-center px-4 sm:px-6 h-14 gap-2 flex-shrink-0"
       style={{ background: 'color-mix(in srgb, var(--sidebar) 98%, transparent)', borderBottom: '1px solid var(--sidebar-border)' }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2 mr-4">
-        <div className="relative w-5 h-5 flex-shrink-0">
-          <div className="absolute inset-0 rounded-full bg-yellow-200 opacity-90" style={{ boxShadow: '0 0 8px var(--cosmos-sun)' }} />
-          <div className="absolute inset-1 rounded-full bg-yellow-400 opacity-70" />
+      <div className="flex items-center gap-3 mr-4">
+        <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent hover:border-sidebar-border hover:bg-foreground/10 transition-colors text-muted-foreground hover:text-foreground">
+          <Home className="h-4 w-4" />
+        </Link>
+        <div className="h-4 w-[1px] bg-sidebar-border" />
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20 text-primary">
+            <IconHierarchy3 className="h-4 w-4" />
+          </div>
+          <span className="text-sm font-semibold text-foreground tracking-tight">
+            Viz 1 · Nutrient Cosmos
+          </span>
         </div>
-        <span className="text-xs font-bold tracking-widest uppercase font-sans text-foreground/70">NutriCosmos</span>
       </div>
 
       {/* Breadcrumb */}

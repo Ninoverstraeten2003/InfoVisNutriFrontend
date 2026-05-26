@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { MapPlaceholder, getDeficiencyColor } from '@/components/viz3/map-placeholder'
 import { TrendCard } from '@/components/viz3/trend-card'
 import { ParadoxCard } from '@/components/viz3/paradox-card'
@@ -13,7 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Home } from 'lucide-react'
+import { IconMap, IconHierarchy3, IconChartBar } from "@tabler/icons-react"
 import { ISO3_TO_NUM } from '@/lib/iso-mapping'
 
 const API_BASE = 'https://nutriverse-api.ninoverstraeten.com'
@@ -28,7 +30,13 @@ const DEFAULT_COUNTRY = 'AFG'
 
 export default function HomePage() {
   const [indicator, setIndicator] = useState('anaemia')
-  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY)
+  const [selectedCountry, setSelectedCountry] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('country') || DEFAULT_COUNTRY;
+    }
+    return DEFAULT_COUNTRY;
+  })
   const [selectedCountryName, setSelectedCountryName] = useState<string>('')
   const [countryData, setCountryData] = useState<any>(null)
   const [regionalData, setRegionalData] = useState<any[]>([])
@@ -122,14 +130,19 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto flex h-16 items-center justify-between px-6">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-muted/20">
-              <span className="text-lg font-bold text-foreground">N</span>
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold text-foreground">Nutriverse</h1>
-              <p className="text-xs text-muted-foreground">What the World Is Missing</p>
+            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent hover:border-border/50 hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground">
+              <Home className="h-4 w-4" />
+            </Link>
+            <div className="h-4 w-[1px] bg-border/50" />
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20 text-primary">
+                <IconMap className="h-4 w-4" />
+              </div>
+              <span className="font-semibold text-foreground tracking-tight text-sm">
+                Viz 3 · World Missing
+              </span>
             </div>
           </div>
 
@@ -242,6 +255,38 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+
+            {/* Explore Further Links */}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 pb-10 grid gap-4 sm:grid-cols-2">
+              <Link 
+                href="/viz1"
+                className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-xl transition-colors hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <IconHierarchy3 className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-semibold text-foreground">Nutrient Cosmos</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Explore how specific nutrients are connected to foods in the network graph.
+                </p>
+              </Link>
+              <Link 
+                href="/viz2"
+                className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-xl transition-colors hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <IconChartBar className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-semibold text-foreground">Meal Builder</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Build a diet with real foods to combat deficiencies and meet health targets.
+                </p>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

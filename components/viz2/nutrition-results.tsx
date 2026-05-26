@@ -130,10 +130,10 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
           <div className="pt-2 mt-2 border-t border-border/50">
             <Link 
               href={`/viz1?nutrient=${encodeURIComponent(nutrient.nutrient_name)}`}
-              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 w-max transition-colors"
+              className="group inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 hover:text-primary"
             >
               Learn more in Cosmos Graph
-              <ArrowRight className="h-3 w-3" />
+              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>

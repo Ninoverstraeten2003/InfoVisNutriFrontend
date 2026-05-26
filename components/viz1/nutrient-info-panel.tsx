@@ -1,6 +1,8 @@
 'use client'
 
 import { Nutrient, NUTRIENT_FAMILY_COLORS } from '@/lib/viz1-cosmos-model'
+import Link from 'next/link'
+import { IconChartBar, IconMap } from '@tabler/icons-react'
 
 interface Props {
   nutrients: Nutrient[]
@@ -62,8 +64,37 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
         </div>
       </div>
 
+      {/* App Links */}
+      <div className="flex flex-col gap-2 mt-4 border-t pt-4" style={{ borderColor: 'var(--sidebar-border)' }}>
+        <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono mb-1">Explore Further</div>
+        <Link 
+          href="/viz2"
+          className="flex items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-foreground/10 transition-colors"
+          style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/20 text-primary">
+            <IconChartBar className="h-4 w-4" />
+          </div>
+          <span className="flex-1 text-xs font-medium text-foreground/80 leading-tight">
+            Build a meal with these sources in Viz 2
+          </span>
+        </Link>
+        <Link 
+          href="/viz3"
+          className="flex items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-foreground/10 transition-colors"
+          style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/20 text-primary">
+            <IconMap className="h-4 w-4" />
+          </div>
+          <span className="flex-1 text-xs font-medium text-foreground/80 leading-tight">
+            See global health impacts in Viz 3
+          </span>
+        </Link>
+      </div>
+
       {/* Hint */}
-      <div className="mt-auto text-xs text-muted-foreground font-mono text-center pt-2">
+      <div className="mt-auto text-xs text-muted-foreground font-mono text-center pt-4">
         Hover planets to reveal foods<br/>Double-click a planet to navigate
       </div>
     </div>

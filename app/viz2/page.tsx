@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Loader2, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { Loader2, ChevronDown, ChevronUp, Home, FlaskConical } from "lucide-react";
+import { IconChartBar } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FoodSearch } from "@/components/viz2/food-search";
 import { MealTray } from "@/components/viz2/meal-tray";
 import { DemographicsForm } from "@/components/viz2/demographics-form";
@@ -25,6 +28,24 @@ export default function MealBuilderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoOpen, setDemoOpen] = useState(true);
+  const [countryOptions, setCountryOptions] = useState<{iso3: string, name: string}[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>("AFG");
+
+  useEffect(() => {
+    fetch("https://nutriverse-api.ninoverstraeten.com/rpc/viz3_all_country_deficiencies?p_indicator=anaemia")
+      .then(res => res.json())
+      .then(data => {
+        const options: {iso3: string, name: string}[] = []
+        data.forEach((row: any) => {
+          if (!options.find(o => o.iso3 === row.iso3)) {
+            options.push({ iso3: row.iso3, name: row.country_name })
+          }
+        })
+        options.sort((a, b) => a.name.localeCompare(b.name))
+        setCountryOptions(options)
+      })
+      .catch(err => console.error(err))
+  }, [])
 
   const handleAdd = useCallback((item: MealItem) => {
     setMealItems((prev) => {
@@ -114,16 +135,19 @@ export default function MealBuilderPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-              <FlaskConical className="h-4 w-4 text-primary-foreground" />
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent hover:border-border hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground">
+              <Home className="h-4 w-4" />
+            </Link>
+            <div className="h-4 w-[1px] bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20 text-primary">
+                <IconChartBar className="h-4 w-4" />
+              </div>
+              <span className="font-semibold text-foreground tracking-tight text-sm">
+                Viz 2 · Perfect Plate
+              </span>
             </div>
-            <span className="font-semibold text-foreground tracking-tight">
-              Meal Builder
-            </span>
-            <span className="hidden sm:inline text-xs text-muted-foreground border border-border rounded px-1.5 py-0.5">
-              EFSA Reference Values
-            </span>
           </div>
           <p className="text-xs text-muted-foreground hidden md:block text-right">
             Add foods · Set portions · Analyze nutrition
@@ -211,6 +235,41 @@ export default function MealBuilderPage() {
                   />
                 </div>
               )}
+            </section>
+
+            {/* Global Context */}
+            <section
+              className="rounded-xl border border-border bg-card p-5 space-y-4"
+              aria-label="Global context"
+            >
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Global Context
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Explore the real-world public health impacts of malnutrition in your country.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger className="w-full bg-background border-border">
+                    <SelectValue placeholder="Select a country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countryOptions.map(c => (
+                      <SelectItem key={c.iso3} value={c.iso3}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Link 
+                  href={`/viz3?country=${selectedCountry}`}
+                  className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                  See your country...
+                </Link>
+              </div>
             </section>
 
             {/* Analyze CTA removed as it is now live */}

@@ -83,7 +83,7 @@ export function RegionalDivideCard({ indicator, regionalData }: RegionalDivideCa
         <div className="space-y-4">
           <div className="h-80">
             <ResponsiveContainer width="100%" height={320}>
-              <ScatterChart>
+              <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
                 <XAxis
                   type="number"

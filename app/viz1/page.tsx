@@ -99,8 +99,28 @@ export default function Page() {
       try {
         const optionData = await fetchViz1Data('viz1_option_nutrients')
 
-        const defaultNutrient =
+        let defaultNutrient =
           extractDefaultOption(optionData, ['selected_nutrient', 'nutrient_name', 'nutrient']) ?? ''
+          
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const requestedNutrient = params.get('nutrient');
+          if (requestedNutrient) {
+            // Attempt to find an exact or partial match in options, otherwise just use it
+            const optionsList = Array.isArray(optionData) ? optionData : [];
+            const match = optionsList.find(o => 
+              Object.values(o).some(val => 
+                String(val).toLowerCase().includes(requestedNutrient.toLowerCase())
+              )
+            );
+            
+            if (match) {
+              defaultNutrient = match.nutrient_name || match.nutrient || match.selected_nutrient || requestedNutrient;
+            } else {
+              defaultNutrient = requestedNutrient;
+            }
+          }
+        }
 
         const [edges, degree, foodAnchors] = await Promise.all([
           fetchViz1Data('viz1_graph_edges'),

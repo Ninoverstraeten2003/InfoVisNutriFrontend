@@ -73,7 +73,7 @@ export function ParadoxCard({
 
       <CardContent>
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Top 10 Crops by Volume</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Most Produced Foods</h4>
           <div className="h-96">
             <ResponsiveContainer width="100%" height={384}>
               <BarChart data={topProduction} layout="vertical">

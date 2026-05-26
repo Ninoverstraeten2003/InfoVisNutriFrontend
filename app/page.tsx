@@ -6,9 +6,9 @@ export default function Page() {
     <main className="min-h-svh bg-[radial-gradient(circle_at_top,oklch(0.93_0.03_150/0.5),transparent_55%),linear-gradient(to_bottom,oklch(1_0_0),oklch(0.98_0.01_140))] px-4 py-8 flex items-center justify-center">
       <div className="flex w-full max-w-4xl flex-col gap-6">
         <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card/90 p-6 backdrop-blur text-center">
-          <h1 className="font-heading text-3xl font-semibold">NutriVerse API Explorer</h1>
+          <h1 className="font-heading text-3xl font-semibold">Welcome to NutriVerse</h1>
           <p className="text-sm text-muted-foreground mx-auto max-w-lg">
-            Select a visualization dashboard to explore the API.
+            Choose a visualization below to explore the fascinating world of food, nutrients, and global health.
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4 text-left">

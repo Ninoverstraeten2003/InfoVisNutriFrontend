@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Nutrient, NUTRIENT_FAMILY_COLORS, NUTRIENT_FAMILY_LABELS, NutrientFamily } from '@/lib/viz1-cosmos-model'
 
-const FAMILIES: NutrientFamily[] = ['vitamin', 'mineral', 'other', 'macronutrient']
+const FAMILIES: NutrientFamily[] = ['vitamin', 'mineral', 'macronutrient', 'fatty', 'amino', 'other']
 
 interface Props {
   nutrients: Nutrient[]
