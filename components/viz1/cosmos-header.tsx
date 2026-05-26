@@ -66,7 +66,7 @@ export default function CosmosHeader({ nutrients, history, onNavigate }: Props) 
 
       {/* Info */}
       <div className="text-xs font-mono text-muted-foreground flex-shrink-0 hidden sm:block">
-        {nutrients.length} nutrients · cosmos view
+        {nutrients.length} nutrients
       </div>
     </header>
   )

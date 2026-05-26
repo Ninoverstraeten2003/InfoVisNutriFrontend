@@ -20,11 +20,6 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
     <aside className="flex flex-col h-full overflow-hidden" style={{ background: 'color-mix(in srgb, var(--sidebar) 95%, transparent)', borderRight: '1px solid var(--sidebar-border)' }}>
       {/* Header */}
       <div className="px-4 pt-5 pb-3 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
-        <div className="flex items-center gap-2 mb-1">
-          <h2 className="font-bold text-sm tracking-widest uppercase text-foreground/80 font-sans">
-            NutriCosmos
-          </h2>
-        </div>
         <p className="text-xs text-muted-foreground font-mono">Select a nutrient to explore</p>
       </div>
 
