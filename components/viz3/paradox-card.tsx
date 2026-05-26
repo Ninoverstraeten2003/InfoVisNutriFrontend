@@ -1,9 +1,10 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts'
 import type { ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { Wheat } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface ProductionItem {
   food: string
@@ -31,6 +32,7 @@ export function ParadoxCard({
     .slice(0, 10)
     .map((item) => ({
       name: item.food.length > 25 ? item.food.substring(0, 25) + '...' : item.food,
+      fullName: item.food,
       tonnes: item.tonnes,
     }))
     .reverse()
@@ -94,15 +96,36 @@ export function ParadoxCard({
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
-                  width={120}
-                  tick={{ fill: '#64748b' }}
+                  width={160}
+                  tick={(props: any) => {
+                    const { x, y, payload } = props
+                    const found = topProduction.find(item => item.name === payload.value)
+                    return (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <g transform={`translate(${x},${y})`} className="cursor-default outline-none">
+                            <text x={0} y={0} dy={4} textAnchor="end" fill="#64748b" fontSize={11}>
+                              {payload.value}
+                            </text>
+                          </g>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[250px]">
+                          {found?.fullName}
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  }}
                 />
-                <Tooltip
+                <ChartTooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     color: '#0f172a',
+                  }}
+                  labelFormatter={(label) => {
+                    const found = topProduction.find(item => item.name === label)
+                    return found ? found.fullName : label
                   }}
                   formatter={(value: ValueType | undefined) => [
                     `${(Number(value) / 1000).toFixed(0)}k tonnes`,

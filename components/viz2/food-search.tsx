@@ -5,6 +5,7 @@ import { Search, Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { FoodOption, MealItem } from "@/lib/types";
 
 interface FoodSearchProps {
@@ -118,9 +119,16 @@ export function FoodSearch({ onAdd }: FoodSearchProps) {
                 aria-selected="false"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground group-hover:text-accent-foreground truncate">
-                    {food.food_name}
-                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-sm font-medium text-foreground group-hover:text-accent-foreground truncate cursor-default">
+                        {food.food_name}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[300px]">
+                      {food.food_name}
+                    </TooltipContent>
+                  </Tooltip>
                   <Badge
                     variant="secondary"
                     className="mt-0.5 text-xs font-normal px-1.5 py-0"

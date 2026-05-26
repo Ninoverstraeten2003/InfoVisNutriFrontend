@@ -3,6 +3,7 @@
 import { Nutrient, NUTRIENT_FAMILY_COLORS } from '@/lib/viz1-cosmos-model'
 import Link from 'next/link'
 import { IconChartBar, IconMap } from '@tabler/icons-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface Props {
   nutrients: Nutrient[]
@@ -43,23 +44,28 @@ export default function NutrientInfoPanel({ nutrients, selectedId, onSelect }: P
         <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono mb-2">Top Food Sources <span className="text-xs font-mono lowercase tracking-wider text-muted-foreground font-mono mb-2">per 100g</span></div>
         <div className="space-y-1">
           {topFoods.map((food, i) => (
-            <div
-              key={`${food.id}-${i}`}
-              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
-              style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
-              title={food.name}
-            >
-              <span
-                className="text-xs font-mono font-bold w-4 opacity-50 shrink-0"
-                style={{ color: col }}
-              >
-                #{i + 1}
-              </span>
-              <span className="flex-1 text-xs font-medium text-foreground/80 line-clamp-2 leading-tight">{food.name}</span>
-              <span className="text-xs font-mono font-bold shrink-0" style={{ color: col }}>
-                {food.rawValue.toFixed(1) + ' '}<span className="text-muted-foreground font-normal">{food.unit}</span>
-              </span>
-            </div>
+            <Tooltip key={`${food.id}-${i}`}>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 cursor-default"
+                  style={{ background: 'var(--sidebar-accent)', border: '1px solid var(--sidebar-border)' }}
+                >
+                  <span
+                    className="text-xs font-mono font-bold w-5 shrink-0"
+                    style={{ color: col }}
+                  >
+                    #{i + 1}
+                  </span>
+                  <span className="flex-1 text-xs font-medium text-foreground/80 line-clamp-2 leading-tight">{food.name}</span>
+                  <span className="text-xs font-mono font-bold shrink-0" style={{ color: col }}>
+                    {food.rawValue.toFixed(1) + ' '}<span className="text-muted-foreground font-normal">{food.unit}</span>
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-[250px]">
+                {food.name}
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </div>

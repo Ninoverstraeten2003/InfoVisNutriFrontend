@@ -25,12 +25,12 @@ export interface Nutrient {
 }
 
 export const NUTRIENT_FAMILY_COLORS: Record<NutrientFamily, string> = {
-  vitamin: "#4fc3f7",
-  mineral: "#80cbc4",
-  amino: "#ce93d8",
-  fatty: "#ffcc80",
-  macronutrient: "#ff9800",
-  other: "#a5d6a7",
+  vitamin: "#38bdf8",
+  mineral: "#4ade80",
+  amino: "#c084fc",
+  fatty: "#fbbf24",
+  macronutrient: "#f87171",
+  other: "#f472b6",
 }
 
 export const NUTRIENT_FAMILY_LABELS: Record<NutrientFamily, string> = {

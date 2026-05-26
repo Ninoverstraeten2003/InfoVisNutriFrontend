@@ -21,7 +21,6 @@ export default function NutrientSidebar({ nutrients, selectedId, onSelect }: Pro
       {/* Header */}
       <div className="px-4 pt-5 pb-3 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-yellow-200 animate-pulse" />
           <h2 className="font-bold text-sm tracking-widest uppercase text-foreground/80 font-sans">
             NutriCosmos
           </h2>
