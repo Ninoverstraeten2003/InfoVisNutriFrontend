@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, UtensilsCrossed, Minus, Plus, Globe } from "lucide-react";
+import { Trash2, UtensilsCrossed, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,16 +47,6 @@ function MealTrayItem({ item, onRemove, onUpdateGrams }: { item: MealItem; onRem
           </Badge>
         </div>
         <div className="flex items-center gap-0.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-          <Link href="/viz3" passHref>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              title="See global deficiency implications"
-            >
-              <Globe className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
           <Button
             variant="ghost"
             size="sm"
