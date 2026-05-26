@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { MapPlaceholder, getDeficiencyColor } from '@/components/viz3/map-placeholder'
 import { TrendCard } from '@/components/viz3/trend-card'
 import { ParadoxCard } from '@/components/viz3/paradox-card'
@@ -29,14 +30,26 @@ const INDICATORS = [
 const DEFAULT_COUNTRY = 'AFG'
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center">Loading data...</div>}>
+      <Viz3Content />
+    </Suspense>
+  )
+}
+
+function Viz3Content() {
+  const searchParams = useSearchParams()
+  const countryParam = searchParams.get('country')
+  
   const [indicator, setIndicator] = useState('anaemia')
-  const [selectedCountry, setSelectedCountry] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('country') || DEFAULT_COUNTRY;
+  const [selectedCountry, setSelectedCountry] = useState(countryParam || DEFAULT_COUNTRY)
+  
+  useEffect(() => {
+    if (countryParam) {
+      setSelectedCountry(countryParam)
     }
-    return DEFAULT_COUNTRY;
-  })
+  }, [countryParam])
+
   const [selectedCountryName, setSelectedCountryName] = useState<string>('')
   const [countryData, setCountryData] = useState<any>(null)
   const [regionalData, setRegionalData] = useState<any[]>([])
