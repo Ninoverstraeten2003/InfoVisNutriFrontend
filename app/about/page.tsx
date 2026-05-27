@@ -77,14 +77,6 @@ export default function AboutPage() {
                 <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
                 <span>EFSA Dietary Reference Values</span>
               </a>
-              <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
-                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
-                <span>FoodData Central (USDA)</span>
-              </a>
-              <a href="http://www.who.int/data/gho" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
-                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
-                <span>Global Health Observatory (WHO)</span>
-              </a>
               <a href="https://www.fao.org/faostat/en/#data/FBS" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
                 <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
                 <span>FAOSTAT Food Balances (FAO)</span>
@@ -92,6 +84,10 @@ export default function AboutPage() {
               <a href="https://globalnutritionreport.org/resources/nutrition-profiles/" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
                 <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
                 <span>Global Nutrition Profiles</span>
+              </a>
+              <a href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>Ciqual French Food Composition Table</span>
               </a>
             </div>
           </div>
