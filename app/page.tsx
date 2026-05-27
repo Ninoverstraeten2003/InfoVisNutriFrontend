@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { IconChartBar, IconHierarchy3, IconMap } from "@tabler/icons-react"
+import { IconChartBar, IconHierarchy3, IconMap, IconInfoCircle } from "@tabler/icons-react"
 
 export default function Page() {
   return (
@@ -48,6 +48,16 @@ export default function Page() {
               <p className="text-sm text-muted-foreground">
                 Explore global deficiencies via maps and charts. Discover the "production paradox"—where high food production doesn't guarantee nutritional security.
               </p>
+            </Link>
+          </div>
+
+          <div className="mt-6 flex justify-center border-t border-border pt-6">
+            <Link 
+              href="/about" 
+              className="inline-flex items-center gap-2 rounded-full bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <IconInfoCircle size={18} />
+              About & Credits
             </Link>
           </div>
         </section>
