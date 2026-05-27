@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { IconArrowLeft, IconMail, IconUser } from "@tabler/icons-react"
+import { IconArrowLeft, IconMail, IconUser, IconLink } from "@tabler/icons-react"
 
 export default function AboutPage() {
   const teamMembers = [
@@ -64,6 +64,36 @@ export default function AboutPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-border space-y-4">
+            <h2 className="font-heading text-xl font-semibold text-left">Data Sources</h2>
+            <div className="grid gap-4 sm:grid-cols-2 text-left">
+              <a href="https://deannaminich.com/wp-content/uploads/2018/10/MET2557-Vitamin-Mineral-Interactions-Chart_IPAD.pdf" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>Vitamin-Mineral Interactions Chart</span>
+              </a>
+              <a href="https://multimedia.efsa.europa.eu/drvs/index.htm" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>EFSA Dietary Reference Values</span>
+              </a>
+              <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>FoodData Central (USDA)</span>
+              </a>
+              <a href="http://www.who.int/data/gho" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>Global Health Observatory (WHO)</span>
+              </a>
+              <a href="https://www.fao.org/faostat/en/#data/FBS" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>FAOSTAT Food Balances (FAO)</span>
+              </a>
+              <a href="https://globalnutritionreport.org/resources/nutrition-profiles/" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-sm hover:text-primary transition-colors">
+                <IconLink size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <span>Global Nutrition Profiles</span>
+              </a>
+            </div>
           </div>
         </section>
       </div>
