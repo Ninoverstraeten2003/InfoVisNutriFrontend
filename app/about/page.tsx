@@ -37,7 +37,7 @@ export default function AboutPage() {
           <div className="space-y-2">
             <h1 className="font-heading text-3xl font-semibold">About & Credits</h1>
             <p className="text-sm text-muted-foreground mx-auto max-w-lg">
-              This project was created by the following team members.
+              This project was created for the Information Visualization course of the academic year 2025-2026 by the following team members:
             </p>
           </div>
 
