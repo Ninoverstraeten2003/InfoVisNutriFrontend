@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, UtensilsCrossed, Minus, Plus, GripVertical } from "lucide-react";
+import { Trash2, UtensilsCrossed, Minus, Plus, GripVertical, Lock, Unlock } from "lucide-react";
 import { DndContext, useDraggable, useDroppable, DragEndEvent, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, closestCenter } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,12 @@ interface MealTrayProps {
   onRemove: (food_id: number, meal_type?: string) => void;
   onUpdateGrams: (food_id: number, grams: number, meal_type?: string) => void;
   onUpdateMealType?: (food_id: number, oldMealType: string | undefined, newMealType: string) => void;
+  onToggleLock?: (food_id: number, meal_type?: string) => void;
   onHover?: (food_id: number | null) => void;
   hoveredFoodId?: number | null;
 }
 
-function MealTrayItem({ item, onRemove, onUpdateGrams, onHover, isHovered }: { item: MealItem; onRemove: (id: number, mt?: string) => void; onUpdateGrams: (id: number, g: number, mt?: string) => void; onHover?: (id: number | null) => void; isHovered?: boolean }) {
+function MealTrayItem({ item, onRemove, onUpdateGrams, onToggleLock, onHover, isHovered }: { item: MealItem; onRemove: (id: number, mt?: string) => void; onUpdateGrams: (id: number, g: number, mt?: string) => void; onToggleLock?: (id: number, mt?: string) => void; onHover?: (id: number | null) => void; isHovered?: boolean }) {
   const [localGrams, setLocalGrams] = useState(item.grams.toString());
 
   const id = `${item.food_id}-${item.meal_type || "none"}`;
@@ -81,6 +82,15 @@ function MealTrayItem({ item, onRemove, onUpdateGrams, onHover, isHovered }: { i
           <Button
             variant="ghost"
             size="sm"
+            className={`h-7 w-7 p-0 ${item.is_locked ? 'text-primary opacity-100' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={(e) => { e.stopPropagation(); onToggleLock?.(item.food_id, item.meal_type); }}
+            aria-label={item.is_locked ? `Unlock ${item.food_name}` : `Lock ${item.food_name}`}
+          >
+            {item.is_locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             onClick={(e) => { e.stopPropagation(); onRemove(item.food_id, item.meal_type); }}
             aria-label={`Remove ${item.food_name}`}
@@ -141,7 +151,7 @@ function MealGroup({ mealType, children }: { mealType: string; children: React.R
   );
 }
 
-export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onHover, hoveredFoodId }: MealTrayProps) {
+export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onToggleLock, onHover, hoveredFoodId }: MealTrayProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
@@ -198,7 +208,7 @@ export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onH
         {sortedGroups.map(([mealType, mealItems]) => (
           <MealGroup key={mealType} mealType={mealType}>
             {mealItems.map((item) => (
-              <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
+              <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onToggleLock={onToggleLock} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
             ))}
           </MealGroup>
         ))}

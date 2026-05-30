@@ -110,13 +110,27 @@ export default function MealBuilderPage() {
     setResults(null);
   }, []);
 
+  const handleToggleLock = useCallback((food_id: number, meal_type?: string) => {
+    setMealItems((prev) =>
+      prev.map((i) => (i.food_id === food_id && i.meal_type === meal_type ? { ...i, is_locked: !i.is_locked } : i))
+    );
+  }, []);
+
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     try {
+      const lockedItems = mealItems.filter(i => i.is_locked).map(i => ({
+        id: i.food_id,
+        name: i.food_name,
+        ranking_category: i.food_category,
+        serving_size_g: i.grams,
+        meal_type: i.meal_type
+      }));
+
       const res = await fetch("/api/generate-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(demographics),
+        body: JSON.stringify({ ...demographics, locked_items: lockedItems }),
       });
       if (!res.ok) throw new Error("Generation failed");
       const data = await res.json();
@@ -128,7 +142,7 @@ export default function MealBuilderPage() {
     } finally {
       setGenerating(false);
     }
-  }, [demographics]);
+  }, [demographics, mealItems]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -267,6 +281,7 @@ export default function MealBuilderPage() {
                 onRemove={handleRemove}
                 onUpdateGrams={handleUpdateGrams}
                 onUpdateMealType={handleUpdateMealType}
+                onToggleLock={handleToggleLock}
                 onHover={setHoveredFoodId}
                 hoveredFoodId={hoveredFoodId}
               />

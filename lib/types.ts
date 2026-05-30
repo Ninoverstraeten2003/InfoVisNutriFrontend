@@ -49,6 +49,7 @@ export interface MealItem {
   food_category: string;
   grams: number;
   meal_type?: string;
+  is_locked?: boolean;
 }
 
 export interface Demographics {

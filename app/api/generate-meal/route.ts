@@ -15,56 +15,59 @@ const MEAL_TEMPLATE = [
 
 const SUPPLEMENT_ONLY_ULS = ["Magnesium", "Folate", "Vitamin B3", "Vitamin E (total)"];
 
-function generateRandomGenome(catalog: any, age?: number) {
-  const genome: any[] = [];
-  for (const slot of MEAL_TEMPLATE) {
-    const cat = slot.category;
-    let validFoods = catalog[cat] || [];
+function generateRandomGenome(catalog: any, age: number, templateSlots: any[], unmatchedLocked: any[]) {
+  const genome = [...templateSlots];
+  for (let i = 0; i < genome.length; i++) {
+    if (genome[i] === null) {
+      const slot = MEAL_TEMPLATE[i];
+      const cat = slot.category;
+      let validFoods = catalog[cat] || [];
 
-    if (validFoods.length > 0) {
-      if (slot.meal === "Dinner" || slot.meal === "Lunch") {
-        validFoods = validFoods.filter(
-          (f: any) =>
-            !f.name.toLowerCase().includes("cereal") &&
-            !f.name.toLowerCase().includes("muesli")
-        );
-      }
-      if (slot.meal === "Breakfast") {
-        validFoods = validFoods.filter(
-          (f: any) =>
-            !f.name.toLowerCase().includes("flour") &&
-            !f.name.toLowerCase().includes("potato")
-        );
-      }
+      if (validFoods.length > 0) {
+        if (slot.meal === "Dinner" || slot.meal === "Lunch") {
+          validFoods = validFoods.filter(
+            (f: any) =>
+              !f.name.toLowerCase().includes("cereal") &&
+              !f.name.toLowerCase().includes("muesli")
+          );
+        }
+        if (slot.meal === "Breakfast") {
+          validFoods = validFoods.filter(
+            (f: any) =>
+              !f.name.toLowerCase().includes("flour") &&
+              !f.name.toLowerCase().includes("potato")
+          );
+        }
 
-      // Filter by Target Age Group
-      if (age !== undefined) {
-        if (age < 1) {
-          validFoods = validFoods.filter((f: any) => f.target_age_group === "infant" || f.target_age_group === "all");
-        } else if (age < 12) {
-          validFoods = validFoods.filter((f: any) => f.target_age_group === "child" || f.target_age_group === "all");
-        } else {
-          validFoods = validFoods.filter((f: any) => f.target_age_group === "adult" || f.target_age_group === "all");
+        if (age !== undefined) {
+          if (age < 1) {
+            validFoods = validFoods.filter((f: any) => f.target_age_group === "infant" || f.target_age_group === "all");
+          } else if (age < 12) {
+            validFoods = validFoods.filter((f: any) => f.target_age_group === "child" || f.target_age_group === "all");
+          } else {
+            validFoods = validFoods.filter((f: any) => f.target_age_group === "adult" || f.target_age_group === "all");
+          }
         }
       }
-    }
 
-    if (validFoods.length > 0) {
-      const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
-      genome.push({ ...randomFood, meal_type: slot.meal });
-    } else {
-      const keys = Object.keys(catalog);
-      const randomCat = catalog[keys[0]];
-      const randomFood = randomCat[Math.floor(Math.random() * randomCat.length)];
-      genome.push({ ...randomFood, meal_type: slot.meal });
+      if (validFoods.length > 0) {
+        const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
+        genome[i] = { ...randomFood, meal_type: slot.meal };
+      } else {
+        const keys = Object.keys(catalog);
+        const randomCat = catalog[keys[Math.floor(Math.random() * keys.length)]];
+        const randomFood = randomCat[Math.floor(Math.random() * randomCat.length)];
+        genome[i] = { ...randomFood, meal_type: slot.meal };
+      }
     }
   }
-  return genome;
+  return [...genome, ...unmatchedLocked];
 }
 
-function mutate(genome: any[], catalog: any, age?: number) {
+function mutate(genome: any[], catalog: any, age: number, freeIndices: number[]) {
+  if (freeIndices.length === 0) return genome;
   const newGenome = [...genome];
-  const mutateIdx = Math.floor(Math.random() * newGenome.length);
+  const mutateIdx = freeIndices[Math.floor(Math.random() * freeIndices.length)];
   const slot = MEAL_TEMPLATE[mutateIdx];
   const cat = slot.category;
 
@@ -222,8 +225,33 @@ export async function POST(request: NextRequest) {
     // 3. Run Genetic Algorithm
     const POPULATION_SIZE = 100;
     const GENERATIONS = 50;
+    
+    const lockedItems = (body.locked_items || []).map((i: any) => ({
+      id: i.id,
+      name: i.name,
+      ranking_category: i.ranking_category,
+      serving_size_g: i.serving_size_g,
+      meal_type: i.meal_type
+    }));
+
+    const templateSlots: any[] = [];
+    const freeIndices: number[] = [];
+    const unmatchedLocked = [...lockedItems];
+
+    for (let i = 0; i < MEAL_TEMPLATE.length; i++) {
+      const slot = MEAL_TEMPLATE[i];
+      const matchIdx = unmatchedLocked.findIndex(l => l.meal_type === slot.meal);
+      if (matchIdx !== -1) {
+        templateSlots.push(unmatchedLocked[matchIdx]);
+        unmatchedLocked.splice(matchIdx, 1);
+      } else {
+        templateSlots.push(null);
+        freeIndices.push(i);
+      }
+    }
+
     let population = Array.from({ length: POPULATION_SIZE }, () =>
-      generateRandomGenome(catalog, body.age)
+      generateRandomGenome(catalog, body.age, templateSlots, unmatchedLocked)
     );
 
     let bestGenome: any = null;
@@ -249,7 +277,7 @@ export async function POST(request: NextRequest) {
       const newPopulation = [...survivors];
       while (newPopulation.length < POPULATION_SIZE) {
         const parent = survivors[Math.floor(Math.random() * survivors.length)];
-        newPopulation.push(mutate(parent, catalog, body.age));
+        newPopulation.push(mutate(parent, catalog, body.age, freeIndices));
       }
       population = newPopulation;
     }
@@ -261,6 +289,7 @@ export async function POST(request: NextRequest) {
       food_category: f.ranking_category,
       grams: f.serving_size_g,
       meal_type: f.meal_type,
+      is_locked: lockedItems.some((locked: any) => locked.id === f.id && locked.meal_type === f.meal_type)
     }));
 
     // Deduplicate (combine grams for identical items in the same meal type)
