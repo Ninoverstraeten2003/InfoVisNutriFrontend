@@ -29,6 +29,13 @@ const SUPPLEMENT_ONLY_ULS = [
   'Vitamin E (total)'
 ];
 
+const PATTERNS = [
+  "repeating-linear-gradient(-45deg, currentColor, currentColor 1.5px, transparent 1.5px, transparent 3px)",
+  "repeating-linear-gradient(-45deg, currentColor, currentColor 3px, transparent 3px, transparent 6px)",
+  "repeating-linear-gradient(-45deg, currentColor, currentColor 5px, transparent 5px, transparent 10px)",
+  "repeating-linear-gradient(-45deg, currentColor, currentColor 8px, transparent 8px, transparent 16px)",
+];
+
 const showToxicityWarning = (nutrient: NutrientResult) => {
   if (SUPPLEMENT_ONLY_ULS.includes(nutrient.nutrient_name)) {
     return false; // Ignore UL warning
@@ -143,13 +150,60 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
               aria-valuemax={100}
               aria-label={`${nutrient.nutrient_name}: ${displayPct.toFixed(0)}% of daily target`}
             >
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-500",
-                  getStatusColor(nutrient, "bg")
-                )}
-                style={{ width: `${Math.min(pct, 100)}%` }}
-              />
+              {(() => {
+                const totalWidth = Math.min(pct, 100);
+                if (totalWidth <= 0) return null;
+                
+                if (!nutrient.breakdown || nutrient.breakdown.length === 0 || consumed <= 0) {
+                  return (
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-500",
+                        getStatusColor(nutrient, "bg")
+                      )}
+                      style={{ width: `${totalWidth}%` }}
+                    />
+                  );
+                }
+
+                const topSources = nutrient.breakdown.slice(0, 4);
+                const tailSources = nutrient.breakdown.slice(4);
+                const tailSum = tailSources.reduce((sum, b) => sum + b.consumed_value, 0);
+                
+                const knownSum = nutrient.breakdown.reduce((sum, b) => sum + b.consumed_value, 0);
+                const unknownValue = Math.max(0, consumed - knownSum);
+                const totalOtherValue = tailSum + unknownValue;
+
+                return (
+                  <div className="h-full flex transition-all duration-500" style={{ width: `${totalWidth}%` }}>
+                    {topSources.map((b, index) => {
+                      const segmentPct = (b.consumed_value / consumed) * 100;
+                      return (
+                        <div
+                          key={index}
+                          className={cn("h-full border-r-2 border-card last:border-r-0", getStatusColor(nutrient, "text"))}
+                          style={{ 
+                            width: `${segmentPct}%`,
+                            backgroundImage: PATTERNS[index]
+                          }}
+                          title={`${b.food_name}: ${formatNumber(b.consumed_value)} ${nutrient.unit}`}
+                        />
+                      );
+                    })}
+                    {totalOtherValue > 0.01 && (
+                      <div
+                        className={cn(
+                          "h-full border-y border-r border-current bg-transparent opacity-60 box-border",
+                          topSources.length === 0 && "border-l",
+                          getStatusColor(nutrient, "text")
+                        )}
+                        style={{ width: `${(totalOtherValue / consumed) * 100}%` }}
+                        title={`Other: ${formatNumber(totalOtherValue)} ${nutrient.unit}`}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -161,12 +215,39 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
             Top Sources in Meal
           </div>
           {nutrient.breakdown && nutrient.breakdown.length > 0 ? (
-            nutrient.breakdown.map((b, index) => (
-              <div key={`${b.food_id}-${index}`} className="flex justify-between items-start gap-2 text-xs">
-                <span className="text-muted-foreground leading-tight">{b.food_name}</span>
-                <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
-              </div>
-            ))
+            (() => {
+              const topSources = nutrient.breakdown.slice(0, 4);
+              const tailSources = nutrient.breakdown.slice(4);
+              const tailSum = tailSources.reduce((sum, b) => sum + b.consumed_value, 0);
+              
+              return (
+                <>
+                  {topSources.map((b, index) => (
+                    <div key={`${b.food_id}-${index}`} className="flex justify-between items-start gap-2 text-xs">
+                      <span className="text-muted-foreground leading-tight">
+                        <span 
+                          className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] bg-muted", getStatusColor(nutrient, "text"))} 
+                          style={{ backgroundImage: PATTERNS[index] }} 
+                        />
+                        <span className="align-middle">{b.food_name}</span>
+                      </span>
+                      <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
+                    </div>
+                  ))}
+                  {tailSum > 0 && (
+                    <div className="flex justify-between items-start gap-2 text-xs">
+                      <span className="text-muted-foreground leading-tight">
+                        <span 
+                          className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] border border-current bg-transparent opacity-60", getStatusColor(nutrient, "text"))} 
+                        />
+                        <span className="align-middle">Other</span>
+                      </span>
+                      <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(tailSum)} {nutrient.unit}</span>
+                    </div>
+                  )}
+                </>
+              );
+            })()
           ) : (
             <div className="text-xs text-muted-foreground italic">No significant sources</div>
           )}
