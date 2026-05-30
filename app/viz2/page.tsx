@@ -34,6 +34,15 @@ export default function MealBuilderPage() {
   const [selectedCountry, setSelectedCountry] = useState<string>("AFG");
 
   useEffect(() => {
+    if (hoveredFoodId !== null) {
+      const stillExists = mealItems.some(item => item.food_id === hoveredFoodId);
+      if (!stillExists) {
+        setHoveredFoodId(null);
+      }
+    }
+  }, [mealItems, hoveredFoodId]);
+
+  useEffect(() => {
     fetch("https://nutriverse-api.ninoverstraeten.com/rpc/viz3_all_country_deficiencies?p_indicator=anaemia")
       .then(res => res.json())
       .then(data => {
@@ -74,6 +83,31 @@ export default function MealBuilderPage() {
     setMealItems((prev) =>
       prev.map((i) => (i.food_id === food_id && i.meal_type === meal_type ? { ...i, grams } : i))
     );
+  }, []);
+
+  const handleUpdateMealType = useCallback((food_id: number, oldMealType: string | undefined, newMealType: string) => {
+    setMealItems((prev) => {
+      const itemToMove = prev.find(i => i.food_id === food_id && i.meal_type === oldMealType);
+      if (!itemToMove) return prev;
+
+      const existingInDest = prev.find(i => i.food_id === food_id && i.meal_type === newMealType);
+      
+      if (existingInDest) {
+        return prev
+          .filter(i => !(i.food_id === food_id && i.meal_type === oldMealType))
+          .map(i => i.food_id === food_id && i.meal_type === newMealType 
+            ? { ...i, grams: i.grams + itemToMove.grams } 
+            : i
+          );
+      } else {
+        return prev.map(i => 
+          i.food_id === food_id && i.meal_type === oldMealType
+            ? { ...i, meal_type: newMealType }
+            : i
+        );
+      }
+    });
+    setResults(null);
   }, []);
 
   const handleGenerate = useCallback(async () => {
@@ -232,6 +266,7 @@ export default function MealBuilderPage() {
                 items={mealItems}
                 onRemove={handleRemove}
                 onUpdateGrams={handleUpdateGrams}
+                onUpdateMealType={handleUpdateMealType}
                 onHover={setHoveredFoodId}
                 hoveredFoodId={hoveredFoodId}
               />

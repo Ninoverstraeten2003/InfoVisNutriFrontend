@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Trash2, UtensilsCrossed, Minus, Plus } from "lucide-react";
+import { Trash2, UtensilsCrossed, Minus, Plus, GripVertical } from "lucide-react";
+import { DndContext, useDraggable, useDroppable, DragEndEvent, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, closestCenter } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +11,24 @@ interface MealTrayProps {
   items: MealItem[];
   onRemove: (food_id: number, meal_type?: string) => void;
   onUpdateGrams: (food_id: number, grams: number, meal_type?: string) => void;
+  onUpdateMealType?: (food_id: number, oldMealType: string | undefined, newMealType: string) => void;
   onHover?: (food_id: number | null) => void;
   hoveredFoodId?: number | null;
 }
 
 function MealTrayItem({ item, onRemove, onUpdateGrams, onHover, isHovered }: { item: MealItem; onRemove: (id: number, mt?: string) => void; onUpdateGrams: (id: number, g: number, mt?: string) => void; onHover?: (id: number | null) => void; isHovered?: boolean }) {
   const [localGrams, setLocalGrams] = useState(item.grams.toString());
+
+  const id = `${item.food_id}-${item.meal_type || "none"}`;
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id,
+    data: { food_id: item.food_id, meal_type: item.meal_type },
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 50,
+  } : undefined;
 
   useEffect(() => {
     setLocalGrams(item.grams.toString());
@@ -36,23 +49,26 @@ function MealTrayItem({ item, onRemove, onUpdateGrams, onHover, isHovered }: { i
 
   return (
     <div 
-      className={`flex flex-col gap-2 rounded-lg border bg-card p-3 group transition-all duration-200 cursor-pointer ${isHovered ? 'border-primary ring-1 ring-primary ring-offset-0' : 'border-border hover:border-primary/30'}`}
+      ref={setNodeRef}
+      style={style}
+      className={`flex flex-col gap-2 rounded-lg border bg-card p-3 group transition-all duration-200 cursor-pointer ${isHovered ? 'border-primary bg-primary/[0.03] shadow-sm' : 'border-border hover:border-primary/30'} ${isDragging ? 'opacity-50 scale-[1.02] shadow-xl' : ''}`}
       onClick={() => onHover?.(isHovered ? null : item.food_id)}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
+        <div 
+          {...listeners} 
+          {...attributes} 
+          className="mt-0.5 shrink-0 cursor-grab touch-none opacity-40 hover:opacity-100 transition-opacity" 
+          onClick={e => e.stopPropagation()}
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground leading-tight">
             {item.food_name}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-            {item.meal_type && (
-              <Badge
-                variant="outline"
-                className="text-[10px] font-medium px-1.5 py-0 border-primary/30 text-primary bg-primary/5"
-              >
-                {item.meal_type}
-              </Badge>
-            )}
+
             <Badge
               variant="secondary"
               className="text-[10px] font-normal px-1.5 py-0"
@@ -104,7 +120,28 @@ function MealTrayItem({ item, onRemove, onUpdateGrams, onHover, isHovered }: { i
   );
 }
 
-export function MealTray({ items, onRemove, onUpdateGrams, onHover, hoveredFoodId }: MealTrayProps) {
+function MealGroup({ mealType, children }: { mealType: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: mealType,
+  });
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      className={`space-y-3 p-2 -mx-2 rounded-xl transition-colors duration-200 ${isOver ? 'bg-primary/5 ring-1 ring-primary/20' : ''}`}
+    >
+      <div className="flex items-center gap-3 px-1">
+        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{mealType}</h3>
+        <div className="h-px flex-1 bg-border/60" />
+      </div>
+      <div className="space-y-2">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onHover, hoveredFoodId }: MealTrayProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
@@ -118,20 +155,63 @@ export function MealTray({ items, onRemove, onUpdateGrams, onHover, hoveredFoodI
 
   const totalGrams = items.reduce((sum, item) => sum + item.grams, 0);
 
-  return (
-    <div className="space-y-2">
-      {items.map((item) => (
-        <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
-      ))}
+  // Group items by meal_type
+  const mealOrder = ["Breakfast", "Lunch", "Dinner", "Snack"];
+  const groupedItems = items.reduce((acc, item) => {
+    const meal = item.meal_type || "Other";
+    if (!acc[meal]) acc[meal] = [];
+    acc[meal].push(item);
+    return acc;
+  }, {} as Record<string, MealItem[]>);
 
-      <div className="flex items-center justify-between pt-1 px-1">
-        <span className="text-xs text-muted-foreground">
-          {items.length} item{items.length !== 1 ? "s" : ""}
-        </span>
-        <span className="text-xs font-medium text-foreground">
-          {totalGrams}g total
-        </span>
+  // Sort groups by predefined order
+  const sortedGroups = Object.entries(groupedItems).sort(([mealA], [mealB]) => {
+    const idxA = mealOrder.indexOf(mealA);
+    const idxB = mealOrder.indexOf(mealB);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return mealA.localeCompare(mealB);
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    
+    const activeData = active.data.current;
+    const newMealType = over.id as string;
+
+    if (activeData && activeData.meal_type !== newMealType) {
+      onUpdateMealType?.(activeData.food_id, activeData.meal_type, newMealType);
+    }
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="space-y-6">
+        {sortedGroups.map(([mealType, mealItems]) => (
+          <MealGroup key={mealType} mealType={mealType}>
+            {mealItems.map((item) => (
+              <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
+            ))}
+          </MealGroup>
+        ))}
+
+        <div className="flex items-center justify-between pt-1 px-1">
+          <span className="text-xs text-muted-foreground">
+            {items.length} item{items.length !== 1 ? "s" : ""}
+          </span>
+          <span className="text-xs font-medium text-foreground">
+            {totalGrams}g total
+          </span>
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
