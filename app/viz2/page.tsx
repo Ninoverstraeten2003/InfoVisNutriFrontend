@@ -50,10 +50,11 @@ export default function MealBuilderPage() {
 
   const handleAdd = useCallback((item: MealItem) => {
     setMealItems((prev) => {
-      const existing = prev.find((i) => i.food_id === item.food_id);
+      // Find exact match including meal_type (or lack thereof)
+      const existing = prev.find((i) => i.food_id === item.food_id && i.meal_type === item.meal_type);
       if (existing) {
         return prev.map((i) =>
-          i.food_id === item.food_id
+          i.food_id === item.food_id && i.meal_type === item.meal_type
             ? { ...i, grams: i.grams + item.grams }
             : i
         );
@@ -63,14 +64,14 @@ export default function MealBuilderPage() {
     setResults(null);
   }, []);
 
-  const handleRemove = useCallback((food_id: number) => {
-    setMealItems((prev) => prev.filter((i) => i.food_id !== food_id));
+  const handleRemove = useCallback((food_id: number, meal_type?: string) => {
+    setMealItems((prev) => prev.filter((i) => !(i.food_id === food_id && i.meal_type === meal_type)));
     setResults(null);
   }, []);
 
-  const handleUpdateGrams = useCallback((food_id: number, grams: number) => {
+  const handleUpdateGrams = useCallback((food_id: number, grams: number, meal_type?: string) => {
     setMealItems((prev) =>
-      prev.map((i) => (i.food_id === food_id ? { ...i, grams } : i))
+      prev.map((i) => (i.food_id === food_id && i.meal_type === meal_type ? { ...i, grams } : i))
     );
   }, []);
 

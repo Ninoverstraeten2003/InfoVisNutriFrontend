@@ -121,6 +121,11 @@ function evaluateFitnessInMemory(genome: any[], targets: any, matrix: any) {
   return score;
 }
 
+// In-memory cache for GA data across warm invocations
+let cachedRawCatalog: any = null;
+let cachedCatalog: any = null;
+let cachedMatrix: any = null;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -134,16 +139,28 @@ export async function POST(request: NextRequest) {
     const headers: HeadersInit = { Accept: "application/json" };
     if (API_KEY) headers["apikey"] = headers["Authorization"] = `Bearer ${API_KEY}`;
 
-    // 1. Fetch GA Data (Catalog + Matrix)
-    const gaDataRes = await fetch(`${API_BASE_URL}/rpc/get_ga_data`, { headers });
-    if (!gaDataRes.ok) throw new Error("Failed to fetch GA data");
-    const { catalog: rawCatalog, matrix } = await gaDataRes.json();
+    // 1. Fetch GA Data (Catalog + Matrix) using cache if available
+    let rawCatalog = cachedRawCatalog;
+    let catalog = cachedCatalog;
+    let matrix = cachedMatrix;
 
-    // Group catalog by category
-    const catalog: any = {};
-    for (const item of rawCatalog) {
-      if (!catalog[item.ranking_category]) catalog[item.ranking_category] = [];
-      catalog[item.ranking_category].push(item);
+    if (!catalog || !matrix || !rawCatalog) {
+      const gaDataRes = await fetch(`${API_BASE_URL}/rpc/get_ga_data`, { headers });
+      if (!gaDataRes.ok) throw new Error("Failed to fetch GA data");
+      const data = await gaDataRes.json();
+      rawCatalog = data.catalog;
+      matrix = data.matrix;
+
+      // Group catalog by category
+      catalog = {};
+      for (const item of rawCatalog) {
+        if (!catalog[item.ranking_category]) catalog[item.ranking_category] = [];
+        catalog[item.ranking_category].push(item);
+      }
+
+      cachedRawCatalog = rawCatalog;
+      cachedCatalog = catalog;
+      cachedMatrix = matrix;
     }
 
     // 2. Fetch Targets
