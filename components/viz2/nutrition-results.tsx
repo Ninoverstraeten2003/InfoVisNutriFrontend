@@ -162,9 +162,9 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
           </div>
           {nutrient.breakdown && nutrient.breakdown.length > 0 ? (
             nutrient.breakdown.map((b, index) => (
-              <div key={`${b.food_id}-${index}`} className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">{b.food_name}</span>
-                <span className="font-mono">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
+              <div key={`${b.food_id}-${index}`} className="flex justify-between items-start gap-2 text-xs">
+                <span className="text-muted-foreground leading-tight">{b.food_name}</span>
+                <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
               </div>
             ))
           ) : (
