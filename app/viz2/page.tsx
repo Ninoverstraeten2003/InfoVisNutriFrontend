@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Loader2, ChevronDown, ChevronUp, Home, FlaskConical } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Home, FlaskConical, Wand2 } from "lucide-react";
 import { IconChartBar } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,7 @@ export default function MealBuilderPage() {
     useState<Demographics>(DEFAULT_DEMOGRAPHICS);
   const [results, setResults] = useState<NutritionResultsType | null>(null);
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoOpen, setDemoOpen] = useState(true);
   const [countryOptions, setCountryOptions] = useState<{iso3: string, name: string}[]>([]);
@@ -72,6 +73,26 @@ export default function MealBuilderPage() {
       prev.map((i) => (i.food_id === food_id ? { ...i, grams } : i))
     );
   }, []);
+
+  const handleGenerate = useCallback(async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(demographics),
+      });
+      if (!res.ok) throw new Error("Generation failed");
+      const data = await res.json();
+      if (data.items) {
+        setMealItems(data.items);
+      }
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Failed to generate meal plan");
+    } finally {
+      setGenerating(false);
+    }
+  }, [demographics]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -184,15 +205,26 @@ export default function MealBuilderPage() {
                 <h2 className="text-sm font-semibold text-foreground">
                   Your Meal Tray
                 </h2>
-                {mealItems.length > 0 && (
+                <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setMealItems([])}
-                    className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                    aria-label="Clear all meal items"
+                    onClick={handleGenerate}
+                    disabled={generating}
+                    className="text-xs font-medium flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                    aria-label="Auto-generate an optimal meal plan"
                   >
-                    Clear all
+                    {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                    {generating ? "Generating..." : "Auto-Generate"}
                   </button>
-                )}
+                  {mealItems.length > 0 && (
+                    <button
+                      onClick={() => setMealItems([])}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                      aria-label="Clear all meal items"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
               </div>
               <MealTray
                 items={mealItems}

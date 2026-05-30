@@ -8,11 +8,11 @@ import type { MealItem } from "@/lib/types";
 
 interface MealTrayProps {
   items: MealItem[];
-  onRemove: (food_id: number) => void;
-  onUpdateGrams: (food_id: number, grams: number) => void;
+  onRemove: (food_id: number, meal_type?: string) => void;
+  onUpdateGrams: (food_id: number, grams: number, meal_type?: string) => void;
 }
 
-function MealTrayItem({ item, onRemove, onUpdateGrams }: { item: MealItem; onRemove: (id: number) => void; onUpdateGrams: (id: number, g: number) => void }) {
+function MealTrayItem({ item, onRemove, onUpdateGrams }: { item: MealItem; onRemove: (id: number, mt?: string) => void; onUpdateGrams: (id: number, g: number, mt?: string) => void }) {
   const [localGrams, setLocalGrams] = useState(item.grams.toString());
 
   useEffect(() => {
@@ -23,13 +23,13 @@ function MealTrayItem({ item, onRemove, onUpdateGrams }: { item: MealItem; onRem
     setLocalGrams(val);
     const parsed = parseInt(val);
     if (!isNaN(parsed) && parsed > 0) {
-      onUpdateGrams(item.food_id, parsed);
+      onUpdateGrams(item.food_id, parsed, item.meal_type);
     }
   };
 
   const stepGrams = (step: number) => {
     const next = Math.max(1, item.grams + step);
-    onUpdateGrams(item.food_id, next);
+    onUpdateGrams(item.food_id, next, item.meal_type);
   };
 
   return (
@@ -39,19 +39,29 @@ function MealTrayItem({ item, onRemove, onUpdateGrams }: { item: MealItem; onRem
           <p className="text-sm font-medium text-foreground leading-tight">
             {item.food_name}
           </p>
-          <Badge
-            variant="secondary"
-            className="mt-1.5 text-[10px] font-normal px-1.5 py-0"
-          >
-            {item.food_category}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            {item.meal_type && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-medium px-1.5 py-0 border-primary/30 text-primary bg-primary/5"
+              >
+                {item.meal_type}
+              </Badge>
+            )}
+            <Badge
+              variant="secondary"
+              className="text-[10px] font-normal px-1.5 py-0"
+            >
+              {item.food_category}
+            </Badge>
+          </div>
         </div>
         <div className="flex items-center gap-0.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onRemove(item.food_id)}
+            onClick={() => onRemove(item.food_id, item.meal_type)}
             aria-label={`Remove ${item.food_name}`}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -106,7 +116,7 @@ export function MealTray({ items, onRemove, onUpdateGrams }: MealTrayProps) {
   return (
     <div className="space-y-2">
       {items.map((item) => (
-        <MealTrayItem key={item.food_id} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} />
+        <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} />
       ))}
 
       <div className="flex items-center justify-between pt-1 px-1">

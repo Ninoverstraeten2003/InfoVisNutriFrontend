@@ -20,18 +20,48 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Nutrients",
 };
 
-function getBarColor(pct: number): string {
-  if (pct >= 120) return "bg-[oklch(0.58_0.22_27)]";
-  if (pct >= 90) return "bg-[oklch(0.55_0.16_155)]";
-  if (pct >= 50) return "bg-[oklch(0.72_0.17_80)]";
-  return "bg-[oklch(0.65_0.18_25)]";
-}
+// These nutrients have EFSA ULs that apply only to supplements or synthetic fortificants.
+// If tracking whole foods, exceeding these targets is biologically safe.
+const SUPPLEMENT_ONLY_ULS = [
+  'Magnesium', 
+  'Folate', 
+  'Vitamin B3', 
+  'Vitamin E (total)'
+];
 
-function getTextColor(pct: number): string {
-  if (pct >= 120) return "text-[oklch(0.58_0.22_27)]";
-  if (pct >= 90) return "text-[oklch(0.55_0.16_155)]";
-  if (pct >= 50) return "text-[oklch(0.72_0.17_80)]";
-  return "text-[oklch(0.65_0.18_25)]";
+const showToxicityWarning = (nutrient: NutrientResult) => {
+  if (SUPPLEMENT_ONLY_ULS.includes(nutrient.nutrient_name)) {
+    return false; // Ignore UL warning
+  }
+  return nutrient.max_value !== null && (nutrient.consumed_value ?? 0) > nutrient.max_value;
+};
+
+function getStatusColor(nutrient: NutrientResult, type: "bg" | "text"): string {
+  const consumed = nutrient.consumed_value ?? 0;
+  const pct = nutrient.percentage_met ?? 0;
+
+  // OVER target limit
+  if (showToxicityWarning(nutrient)) {
+    return type === "bg" ? "bg-[oklch(0.58_0.22_27)]" : "text-[oklch(0.58_0.22_27)]";
+  }
+
+  // Met target
+  if (nutrient.target_value !== null && pct >= 90) {
+    return type === "bg" ? "bg-[oklch(0.55_0.16_155)]" : "text-[oklch(0.55_0.16_155)]";
+  }
+
+  // Has no target, but has max value and is not over it
+  if (nutrient.target_value === null && nutrient.max_value !== null) {
+    return type === "bg" ? "bg-[oklch(0.55_0.16_155)]" : "text-[oklch(0.55_0.16_155)]";
+  }
+
+  // Partial target
+  if (pct >= 50) {
+    return type === "bg" ? "bg-[oklch(0.72_0.17_80)]" : "text-[oklch(0.72_0.17_80)]";
+  }
+
+  // Under target
+  return type === "bg" ? "bg-[oklch(0.65_0.18_25)]" : "text-[oklch(0.65_0.18_25)]";
 }
 
 function formatNumber(val: number): string {
@@ -46,8 +76,14 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
 
   const consumed = nutrient.consumed_value ?? 0;
   const hasTarget = nutrient.target_value !== null;
+  const hasMax = nutrient.max_value !== null && !SUPPLEMENT_ONLY_ULS.includes(nutrient.nutrient_name);
   const target = nutrient.target_value ?? 0;
-  const displayPct = nutrient.percentage_met ?? 0;
+  const max = nutrient.max_value ?? 0;
+  
+  let displayPct = nutrient.percentage_met ?? 0;
+  if (!hasTarget && hasMax && max > 0) {
+    displayPct = (consumed / max) * 100;
+  }
   const pct = Math.min(displayPct, 150);
 
   return (
@@ -69,19 +105,27 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
           <div className="flex items-center gap-3 shrink-0">
             <span className="text-xs text-muted-foreground tabular-nums">
               {formatNumber(consumed)}{" "}
-              {hasTarget ? (
+              {hasTarget && hasMax ? (
+                <span className="text-muted-foreground/70">
+                  / {formatNumber(target)} (max {formatNumber(max)}) {nutrient.unit}
+                </span>
+              ) : hasTarget ? (
                 <span className="text-muted-foreground/70">
                   / {formatNumber(target)} {nutrient.unit}
+                </span>
+              ) : hasMax ? (
+                <span className="text-muted-foreground/70">
+                  (max {formatNumber(max)}) {nutrient.unit}
                 </span>
               ) : (
                 <span className="text-muted-foreground/70">{nutrient.unit}</span>
               )}
             </span>
-            {hasTarget && (
+            {(hasTarget || hasMax) && (
               <span
                 className={cn(
                   "text-xs font-bold tabular-nums w-12 text-right",
-                  getTextColor(displayPct)
+                  getStatusColor(nutrient, "text")
                 )}
               >
                 {displayPct.toFixed(0)}%
@@ -89,7 +133,7 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
             )}
           </div>
         </div>
-        {hasTarget && (
+        {(hasTarget || hasMax) && (
           <div className="pl-7 mt-1.5">
             <div
               className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
@@ -102,7 +146,7 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",
-                  getBarColor(displayPct)
+                  getStatusColor(nutrient, "bg")
                 )}
                 style={{ width: `${Math.min(pct, 100)}%` }}
               />
@@ -117,8 +161,8 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
             Top Sources in Meal
           </div>
           {nutrient.breakdown && nutrient.breakdown.length > 0 ? (
-            nutrient.breakdown.map((b) => (
-              <div key={b.food_id} className="flex justify-between items-center text-xs">
+            nutrient.breakdown.map((b, index) => (
+              <div key={`${b.food_id}-${index}`} className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">{b.food_name}</span>
                 <span className="font-mono">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
               </div>
@@ -165,11 +209,11 @@ export function NutritionResults({ results }: NutritionResultsProps) {
 
   if (totalCategories === 0) return null;
 
-  // Summary stats (only counting nutrients with a target value)
-  const tracked = results.filter((r) => r.target_value !== null);
-  const met = tracked.filter((r) => r.percentage_met !== null && r.percentage_met >= 90 && r.percentage_met <= 120).length;
-  const over = tracked.filter((r) => r.percentage_met !== null && r.percentage_met > 120).length;
-  const under = tracked.filter((r) => r.percentage_met !== null && r.percentage_met < 90).length;
+  // Summary stats (counting nutrients with a target value OR a max value)
+  const tracked = results.filter((r) => r.target_value !== null || r.max_value !== null);
+  const over = tracked.filter((r) => showToxicityWarning(r)).length;
+  const under = tracked.filter((r) => r.target_value !== null && (r.percentage_met ?? 0) < 90).length;
+  const met = tracked.length - over - under;
 
   return (
     <div className="space-y-6">
@@ -179,18 +223,21 @@ export function NutritionResults({ results }: NutritionResultsProps) {
           {
             label: "On Target",
             value: met,
+            total: tracked.length,
             color: "text-[oklch(0.55_0.16_155)]",
             bg: "bg-[oklch(0.55_0.16_155)]/10",
           },
           {
             label: "Under Target",
             value: under,
+            total: tracked.length,
             color: "text-[oklch(0.65_0.18_25)]",
             bg: "bg-[oklch(0.65_0.18_25)]/10",
           },
           {
             label: "Over Target",
             value: over,
+            total: tracked.length,
             color: "text-[oklch(0.58_0.22_27)]",
             bg: "bg-[oklch(0.58_0.22_27)]/10",
           },
@@ -202,8 +249,11 @@ export function NutritionResults({ results }: NutritionResultsProps) {
               stat.bg
             )}
           >
-            <div className={cn("text-2xl font-bold tabular-nums", stat.color)}>
+            <div className={cn("text-2xl font-bold tabular-nums flex items-baseline justify-center", stat.color)}>
               {stat.value}
+              <span className="text-sm font-medium opacity-60 ml-1">
+                / {stat.total}
+              </span>
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {stat.label}
@@ -217,8 +267,8 @@ export function NutritionResults({ results }: NutritionResultsProps) {
         {[
           { dot: "bg-[oklch(0.65_0.18_25)]", label: "< 50%" },
           { dot: "bg-[oklch(0.72_0.17_80)]", label: "50–89%" },
-          { dot: "bg-[oklch(0.55_0.16_155)]", label: "90–120% (target)" },
-          { dot: "bg-[oklch(0.58_0.22_27)]", label: "> 120%" },
+          { dot: "bg-[oklch(0.55_0.16_155)]", label: "≥ 90% (target)" },
+          { dot: "bg-[oklch(0.58_0.22_27)]", label: "> Max Limit" },
         ].map((l) => (
           <span key={l.label} className="flex items-center gap-1.5">
             <span className={cn("h-2 w-2 rounded-full", l.dot)} />

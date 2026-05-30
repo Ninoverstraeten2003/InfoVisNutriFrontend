@@ -48,6 +48,7 @@ export interface MealItem {
   food_name: string;
   food_category: string;
   grams: number;
+  meal_type?: string;
 }
 
 export interface Demographics {
@@ -60,10 +61,11 @@ export interface Demographics {
 export interface NutrientResult {
   nutrient_name: string;
   nutrient_category: string;
-  consumed_value: number;
-  target_value: number;
+  consumed_value: number | null;
+  target_value: number | null;
+  max_value: number | null;
   unit: string;
-  percentage_met: number;
+  percentage_met: number | null;
   breakdown?: {
     food_id: number;
     food_name: string;

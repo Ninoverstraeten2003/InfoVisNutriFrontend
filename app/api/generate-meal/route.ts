@@ -1,0 +1,237 @@
+import { NextRequest, NextResponse } from "next/server";
+
+const API_BASE_URL = process.env.POSTGREST_API_URL || "http://127.0.0.1:3000";
+const API_KEY = process.env.POSTGREST_API_KEY || "";
+
+const MEAL_TEMPLATE = [
+  { meal: "Breakfast", category: "carb_base" },
+  { meal: "Breakfast", category: "beverage" },
+  { meal: "Lunch", category: "main" },
+  { meal: "Lunch", category: "side" },
+  { meal: "Dinner", category: "main" },
+  { meal: "Dinner", category: "carb_base" },
+  { meal: "Dinner", category: "side" },
+];
+
+const SUPPLEMENT_ONLY_ULS = ["Magnesium", "Folate", "Vitamin B3", "Vitamin E (total)"];
+
+function generateRandomGenome(catalog: any) {
+  const genome: any[] = [];
+  for (const slot of MEAL_TEMPLATE) {
+    const cat = slot.category;
+    let validFoods = catalog[cat] || [];
+
+    if (validFoods.length > 0) {
+      if (slot.meal === "Dinner" || slot.meal === "Lunch") {
+        validFoods = validFoods.filter(
+          (f: any) =>
+            !f.name.toLowerCase().includes("cereal") &&
+            !f.name.toLowerCase().includes("muesli")
+        );
+      }
+      if (slot.meal === "Breakfast") {
+        validFoods = validFoods.filter(
+          (f: any) =>
+            !f.name.toLowerCase().includes("flour") &&
+            !f.name.toLowerCase().includes("potato")
+        );
+      }
+    }
+
+    if (validFoods.length > 0) {
+      const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
+      genome.push({ ...randomFood, meal_type: slot.meal });
+    } else {
+      const keys = Object.keys(catalog);
+      const randomCat = catalog[keys[0]];
+      const randomFood = randomCat[Math.floor(Math.random() * randomCat.length)];
+      genome.push({ ...randomFood, meal_type: slot.meal });
+    }
+  }
+  return genome;
+}
+
+function mutate(genome: any[], catalog: any) {
+  const newGenome = [...genome];
+  const mutateIdx = Math.floor(Math.random() * newGenome.length);
+  const slot = MEAL_TEMPLATE[mutateIdx];
+  const cat = slot.category;
+
+  if (catalog[cat] && catalog[cat].length > 0) {
+    const randomFood = catalog[cat][Math.floor(Math.random() * catalog[cat].length)];
+    newGenome[mutateIdx] = { ...randomFood, meal_type: slot.meal };
+  }
+  return newGenome;
+}
+
+function evaluateFitnessInMemory(genome: any[], targets: any, matrix: any) {
+  const consumed: Record<string, number> = {};
+  for (const food of genome) {
+    const foodId = food.id;
+    const amount = food.serving_size_g;
+    if (matrix[foodId]) {
+      for (const nutName in matrix[foodId]) {
+        const valPer100g = matrix[foodId][nutName];
+        consumed[nutName] = (consumed[nutName] || 0) + valPer100g * (amount / 100.0);
+      }
+    }
+  }
+
+  let score = 0;
+  for (const nutName in targets) {
+    const tData = targets[nutName];
+    let cons = consumed[nutName] || 0;
+
+    if (nutName === "Energy") {
+      cons = cons / 4.184;
+    }
+
+    const targetVal = tData.target;
+    const maxVal = tData.max;
+
+    if (targetVal === 0 && maxVal === null) {
+      continue;
+    }
+
+    const pct = targetVal > 0 ? (cons / targetVal) * 100 : 0;
+
+    if (maxVal !== null && cons > maxVal) {
+      if (!SUPPLEMENT_ONLY_ULS.includes(nutName)) {
+        score -= 1000;
+      }
+    }
+
+    if (targetVal > 0) {
+      if (pct >= 90 && pct <= 110) {
+        score += 10;
+      } else if (pct > 110) {
+        score += 5;
+      } else if (pct >= 50) {
+        score += 2;
+      } else {
+        score -= 5;
+      }
+    }
+
+    if (nutName === "Energy" && targetVal > 0) {
+      if (pct < 85) score -= 50;
+      else if (pct > 115) score -= 100;
+    }
+  }
+  return score;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    let p_pal = 1.6;
+    if (body.activity_level === "sedentary") p_pal = 1.4;
+    else if (body.activity_level === "low") p_pal = 1.6;
+    else if (body.activity_level === "moderate") p_pal = 1.8;
+    else if (body.activity_level === "high") p_pal = 2.0;
+    else if (body.activity_level === "very_high") p_pal = 2.2;
+
+    const headers: HeadersInit = { Accept: "application/json" };
+    if (API_KEY) headers["apikey"] = headers["Authorization"] = `Bearer ${API_KEY}`;
+
+    // 1. Fetch GA Data (Catalog + Matrix)
+    const gaDataRes = await fetch(`${API_BASE_URL}/rpc/get_ga_data`, { headers });
+    if (!gaDataRes.ok) throw new Error("Failed to fetch GA data");
+    const { catalog: rawCatalog, matrix } = await gaDataRes.json();
+
+    // Group catalog by category
+    const catalog: any = {};
+    for (const item of rawCatalog) {
+      if (!catalog[item.ranking_category]) catalog[item.ranking_category] = [];
+      catalog[item.ranking_category].push(item);
+    }
+
+    // 2. Fetch Targets
+    // Create a fake meal with 0.0001g of everything to force DB to evaluate all nutrients
+    const fakeMeal = rawCatalog.map((f: any) => ({
+      food_id: f.id,
+      amount_g: 0.0001,
+    }));
+
+    const targetPayload = {
+      p_age_years: body.age,
+      p_sex: body.sex === "male" ? "Male" : body.sex === "female" ? "Female" : body.sex,
+      p_food_items: fakeMeal,
+      p_pal: p_pal,
+      p_body_weight_kg: body.weight_kg,
+    };
+
+    const targetRes = await fetch(`${API_BASE_URL}/rpc/calculate_meal_nutrition`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(targetPayload),
+    });
+
+    if (!targetRes.ok) throw new Error("Failed to fetch targets");
+    const targetData = await targetRes.json();
+
+    const targets: any = {};
+    for (const row of targetData) {
+      targets[row.nutrient_name] = {
+        target: row.target_value || 0,
+        max: row.max_value || null,
+      };
+    }
+
+    // 3. Run Genetic Algorithm
+    const POPULATION_SIZE = 100;
+    const GENERATIONS = 50;
+    let population = Array.from({ length: POPULATION_SIZE }, () =>
+      generateRandomGenome(catalog)
+    );
+
+    let bestGenome: any = null;
+    let bestScore = -99999;
+
+    for (let gen = 0; gen < GENERATIONS; gen++) {
+      const scoredPopulation = population.map((ind) => {
+        const score = evaluateFitnessInMemory(ind, targets, matrix);
+        return { score, genome: ind };
+      });
+
+      scoredPopulation.sort((a, b) => b.score - a.score);
+
+      if (scoredPopulation[0].score > bestScore) {
+        bestScore = scoredPopulation[0].score;
+        bestGenome = scoredPopulation[0].genome;
+      }
+
+      const survivors = scoredPopulation
+        .slice(0, Math.floor(POPULATION_SIZE * 0.2))
+        .map((x) => x.genome);
+
+      const newPopulation = [...survivors];
+      while (newPopulation.length < POPULATION_SIZE) {
+        const parent = survivors[Math.floor(Math.random() * survivors.length)];
+        newPopulation.push(mutate(parent, catalog));
+      }
+      population = newPopulation;
+    }
+
+    // Convert genome format to MealItem[]
+    const mealItems = bestGenome.map((f: any) => ({
+      food_id: f.id,
+      food_name: f.name,
+      food_category: f.ranking_category,
+      grams: f.serving_size_g,
+      meal_type: f.meal_type,
+    }));
+
+    // Deduplicate (combine grams for identical items in the same meal type)
+    const mergedItems: any[] = [];
+    for (const item of mealItems) {
+      const existing = mergedItems.find((i) => i.food_id === item.food_id && i.meal_type === item.meal_type);
+      if (existing) existing.grams += item.grams;
+      else mergedItems.push(item);
+    }
+
+    return NextResponse.json({ items: mergedItems });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
