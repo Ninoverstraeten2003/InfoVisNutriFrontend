@@ -15,7 +15,7 @@ const MEAL_TEMPLATE = [
 
 const SUPPLEMENT_ONLY_ULS = ["Magnesium", "Folate", "Vitamin B3", "Vitamin E (total)"];
 
-function generateRandomGenome(catalog: any) {
+function generateRandomGenome(catalog: any, age?: number) {
   const genome: any[] = [];
   for (const slot of MEAL_TEMPLATE) {
     const cat = slot.category;
@@ -36,6 +36,17 @@ function generateRandomGenome(catalog: any) {
             !f.name.toLowerCase().includes("potato")
         );
       }
+
+      // Filter by Target Age Group
+      if (age !== undefined) {
+        if (age < 1) {
+          validFoods = validFoods.filter((f: any) => f.target_age_group === "infant" || f.target_age_group === "all");
+        } else if (age < 12) {
+          validFoods = validFoods.filter((f: any) => f.target_age_group === "child" || f.target_age_group === "all");
+        } else {
+          validFoods = validFoods.filter((f: any) => f.target_age_group === "adult" || f.target_age_group === "all");
+        }
+      }
     }
 
     if (validFoods.length > 0) {
@@ -51,14 +62,27 @@ function generateRandomGenome(catalog: any) {
   return genome;
 }
 
-function mutate(genome: any[], catalog: any) {
+function mutate(genome: any[], catalog: any, age?: number) {
   const newGenome = [...genome];
   const mutateIdx = Math.floor(Math.random() * newGenome.length);
   const slot = MEAL_TEMPLATE[mutateIdx];
   const cat = slot.category;
 
-  if (catalog[cat] && catalog[cat].length > 0) {
-    const randomFood = catalog[cat][Math.floor(Math.random() * catalog[cat].length)];
+  let validFoods = catalog[cat] || [];
+  if (validFoods.length > 0) {
+    if (age !== undefined) {
+      if (age < 1) {
+        validFoods = validFoods.filter((f: any) => f.target_age_group === "infant" || f.target_age_group === "all");
+      } else if (age < 12) {
+        validFoods = validFoods.filter((f: any) => f.target_age_group === "child" || f.target_age_group === "all");
+      } else {
+        validFoods = validFoods.filter((f: any) => f.target_age_group === "adult" || f.target_age_group === "all");
+      }
+    }
+  }
+
+  if (validFoods.length > 0) {
+    const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
     newGenome[mutateIdx] = { ...randomFood, meal_type: slot.meal };
   }
   return newGenome;
@@ -199,7 +223,7 @@ export async function POST(request: NextRequest) {
     const POPULATION_SIZE = 100;
     const GENERATIONS = 50;
     let population = Array.from({ length: POPULATION_SIZE }, () =>
-      generateRandomGenome(catalog)
+      generateRandomGenome(catalog, body.age)
     );
 
     let bestGenome: any = null;
@@ -225,7 +249,7 @@ export async function POST(request: NextRequest) {
       const newPopulation = [...survivors];
       while (newPopulation.length < POPULATION_SIZE) {
         const parent = survivors[Math.floor(Math.random() * survivors.length)];
-        newPopulation.push(mutate(parent, catalog));
+        newPopulation.push(mutate(parent, catalog, body.age));
       }
       population = newPopulation;
     }
