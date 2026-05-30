@@ -111,22 +111,22 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
             </span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="text-xs text-foreground/90 font-medium tabular-nums">
               {formatNumber(consumed)}{" "}
               {hasTarget && hasMax ? (
-                <span className="text-muted-foreground/70">
+                <span className="text-muted-foreground font-normal">
                   / {formatNumber(target)} (max {formatNumber(max)}) {nutrient.unit}
                 </span>
               ) : hasTarget ? (
-                <span className="text-muted-foreground/70">
+                <span className="text-muted-foreground font-normal">
                   / {formatNumber(target)} {nutrient.unit}
                 </span>
               ) : hasMax ? (
-                <span className="text-muted-foreground/70">
+                <span className="text-muted-foreground font-normal">
                   (max {formatNumber(max)}) {nutrient.unit}
                 </span>
               ) : (
-                <span className="text-muted-foreground/70">{nutrient.unit}</span>
+                <span className="text-muted-foreground font-normal">{nutrient.unit}</span>
               )}
             </span>
             {(hasTarget || hasMax) && (
@@ -167,8 +167,16 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                   );
                 }
 
-                const topSources = nutrient.breakdown.slice(0, 4);
-                const tailSources = nutrient.breakdown.slice(4);
+                const topSources = [];
+                const tailSources = [];
+                for (let i = 0; i < nutrient.breakdown.length; i++) {
+                  const b = nutrient.breakdown[i];
+                  if (i < 4 && (i === 0 || b.consumed_value / consumed >= 0.02)) {
+                    topSources.push(b);
+                  } else {
+                    tailSources.push(b);
+                  }
+                }
                 const tailSum = tailSources.reduce((sum, b) => sum + b.consumed_value, 0);
                 
                 const knownSum = nutrient.breakdown.reduce((sum, b) => sum + b.consumed_value, 0);
@@ -226,40 +234,60 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
       
       {expanded && (
         <div className="mt-3 ml-7 space-y-2 animate-in slide-in-from-top-1 fade-in duration-200">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <div className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-1">
             Top Sources in Meal
           </div>
           {nutrient.breakdown && nutrient.breakdown.length > 0 ? (
             (() => {
-              const topSources = nutrient.breakdown.slice(0, 4);
-              const tailSources = nutrient.breakdown.slice(4);
+              const topSources = [];
+              const tailSources = [];
+              for (let i = 0; i < nutrient.breakdown.length; i++) {
+                const b = nutrient.breakdown[i];
+                if (i < 4 && (i === 0 || b.consumed_value / consumed >= 0.02)) {
+                  topSources.push(b);
+                } else {
+                  tailSources.push(b);
+                }
+              }
               const tailSum = tailSources.reduce((sum, b) => sum + b.consumed_value, 0);
               
               return (
                 <>
-                  {topSources.map((b, index) => (
-                    <div key={`${b.food_id}-${index}`} className="flex justify-between items-start gap-2 text-xs">
-                      <span className="text-muted-foreground leading-tight">
-                        <span 
-                          className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] bg-muted", getStatusColor(nutrient, "text"))} 
-                          style={{ backgroundImage: PATTERNS[index] }} 
-                        />
-                        <span className="align-middle">{b.food_name}</span>
-                      </span>
-                      <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(b.consumed_value)} {nutrient.unit}</span>
-                    </div>
-                  ))}
-                  {tailSum > 0 && (
-                    <div className="flex justify-between items-start gap-2 text-xs">
-                      <span className="text-muted-foreground leading-tight">
-                        <span 
-                          className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] border border-current bg-transparent opacity-60", getStatusColor(nutrient, "text"))} 
-                        />
-                        <span className="align-middle">Other</span>
-                      </span>
-                      <span className="font-mono whitespace-nowrap shrink-0 text-right">{formatNumber(tailSum)} {nutrient.unit}</span>
-                    </div>
-                  )}
+                  {topSources.map((b, index) => {
+                    const isSelected = hoveredFoodId === b.food_id;
+                    const isAnySelected = hoveredFoodId !== null;
+                    return (
+                      <div key={`${b.food_id}-${index}`} className={cn("flex justify-between items-start gap-3 text-xs transition-opacity duration-200", isAnySelected && !isSelected ? "opacity-40" : "opacity-100")}>
+                        <span className={cn("leading-tight transition-colors duration-200", isSelected ? "text-foreground font-bold" : "text-foreground/90")}>
+                          {(hasTarget || hasMax) && (
+                            <span 
+                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] bg-muted", getStatusColor(nutrient, "text"))} 
+                              style={{ backgroundImage: PATTERNS[index] }} 
+                            />
+                          )}
+                          <span className={cn("align-middle transition-all duration-200", isSelected ? "font-bold" : "font-medium")}>{b.food_name}</span>
+                        </span>
+                        <span className={cn("font-mono whitespace-nowrap shrink-0 text-right transition-all duration-200", isSelected ? "text-foreground font-bold" : "text-foreground font-medium")}>{formatNumber(b.consumed_value)} {nutrient.unit}</span>
+                      </div>
+                    );
+                  })}
+                  {tailSum > 0 && (() => {
+                    const isOtherSelected = hoveredFoodId !== null && tailSources.some(t => t.food_id === hoveredFoodId);
+                    const isAnySelected = hoveredFoodId !== null;
+                    return (
+                      <div className={cn("flex justify-between items-start gap-3 text-xs transition-opacity duration-200", isAnySelected && !isOtherSelected ? "opacity-40" : "opacity-100")}>
+                        <span className={cn("leading-tight transition-colors duration-200", isOtherSelected ? "text-foreground font-bold" : "text-foreground/80")}>
+                          {(hasTarget || hasMax) && (
+                            <span 
+                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] border border-current bg-transparent opacity-60", getStatusColor(nutrient, "text"))} 
+                            />
+                          )}
+                          <span className={cn("align-middle transition-all duration-200", isOtherSelected ? "font-bold" : "font-medium")}>Other</span>
+                        </span>
+                        <span className={cn("font-mono whitespace-nowrap shrink-0 text-right transition-all duration-200", isOtherSelected ? "text-foreground font-bold" : "text-foreground/80 font-medium")}>{formatNumber(tailSum)} {nutrient.unit}</span>
+                      </div>
+                    );
+                  })()}
                 </>
               );
             })()
