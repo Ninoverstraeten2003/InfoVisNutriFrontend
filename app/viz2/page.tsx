@@ -28,6 +28,7 @@ export default function MealBuilderPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredFoodId, setHoveredFoodId] = useState<number | null>(null);
   const [demoOpen, setDemoOpen] = useState(true);
   const [countryOptions, setCountryOptions] = useState<{iso3: string, name: string}[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("AFG");
@@ -231,6 +232,8 @@ export default function MealBuilderPage() {
                 items={mealItems}
                 onRemove={handleRemove}
                 onUpdateGrams={handleUpdateGrams}
+                onHover={setHoveredFoodId}
+                hoveredFoodId={hoveredFoodId}
               />
             </section>
 
@@ -335,7 +338,7 @@ export default function MealBuilderPage() {
                   </p>
                 </div>
                 <Separator />
-                <NutritionResults results={results} />
+                <NutritionResults results={results} hoveredFoodId={hoveredFoodId} />
               </div>
             ) : loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">

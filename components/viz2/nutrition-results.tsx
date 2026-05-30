@@ -8,6 +8,7 @@ import Link from "next/link";
 
 interface NutritionResultsProps {
   results: NutrientResult[];
+  hoveredFoodId?: number | null;
 }
 
 const CATEGORY_ORDER = ["energy", "macro", "lipid", "vitamin", "mineral", "other"];
@@ -78,7 +79,7 @@ function formatNumber(val: number): string {
   return val.toFixed(1);
 }
 
-function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
+function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; hoveredFoodId?: number | null }) {
   const [expanded, setExpanded] = useState(false);
 
   const consumed = nutrient.consumed_value ?? 0;
@@ -178,10 +179,18 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
                   <div className="h-full flex transition-all duration-500" style={{ width: `${totalWidth}%` }}>
                     {topSources.map((b, index) => {
                       const segmentPct = (b.consumed_value / consumed) * 100;
+                      const isHovered = hoveredFoodId === b.food_id;
+                      const isAnyHovered = hoveredFoodId !== null;
+                      
                       return (
                         <div
                           key={index}
-                          className={cn("h-full border-r-2 border-card last:border-r-0", getStatusColor(nutrient, "text"))}
+                          className={cn(
+                            "h-full border-r-2 border-card transition-all duration-200", 
+                            index === topSources.length - 1 && totalOtherValue <= 0.01 && "border-r-0",
+                            getStatusColor(nutrient, "text"),
+                            isAnyHovered && !isHovered ? "opacity-30" : "opacity-100"
+                          )}
                           style={{ 
                             width: `${segmentPct}%`,
                             backgroundImage: PATTERNS[index]
@@ -190,17 +199,23 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
                         />
                       );
                     })}
-                    {totalOtherValue > 0.01 && (
-                      <div
-                        className={cn(
-                          "h-full border-y border-r border-current bg-transparent opacity-60 box-border",
-                          topSources.length === 0 && "border-l",
-                          getStatusColor(nutrient, "text")
-                        )}
-                        style={{ width: `${(totalOtherValue / consumed) * 100}%` }}
-                        title={`Other: ${formatNumber(totalOtherValue)} ${nutrient.unit}`}
-                      />
-                    )}
+                    {totalOtherValue > 0.01 && (() => {
+                      const isHovered = hoveredFoodId !== null && tailSources.some(t => t.food_id === hoveredFoodId);
+                      const isAnyHovered = hoveredFoodId !== null;
+                      
+                      return (
+                        <div
+                          className={cn(
+                            "h-full border-y border-r border-current bg-transparent box-border transition-all duration-200 relative",
+                            topSources.length === 0 && "border-l",
+                            getStatusColor(nutrient, "text"),
+                            isAnyHovered && !isHovered ? "opacity-20" : (isHovered ? "opacity-100" : "opacity-60")
+                          )}
+                          style={{ width: `${(totalOtherValue / consumed) * 100}%` }}
+                          title={`Other: ${formatNumber(totalOtherValue)} ${nutrient.unit}`}
+                        />
+                      );
+                    })()}
                   </div>
                 );
               })()}
@@ -267,7 +282,7 @@ function NutrientRow({ nutrient }: { nutrient: NutrientResult }) {
   );
 }
 
-export function NutritionResults({ results }: NutritionResultsProps) {
+export function NutritionResults({ results, hoveredFoodId }: NutritionResultsProps) {
   const grouped = CATEGORY_ORDER.reduce<Record<string, NutrientResult[]>>(
     (acc, cat) => {
       const items = results.filter(
@@ -298,64 +313,59 @@ export function NutritionResults({ results }: NutritionResultsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Summary bar */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          {
-            label: "On Target",
-            value: met,
-            total: tracked.length,
-            color: "text-[oklch(0.55_0.16_155)]",
-            bg: "bg-[oklch(0.55_0.16_155)]/10",
-          },
-          {
-            label: "Under Target",
-            value: under,
-            total: tracked.length,
-            color: "text-[oklch(0.65_0.18_25)]",
-            bg: "bg-[oklch(0.65_0.18_25)]/10",
-          },
-          {
-            label: "Over Target",
-            value: over,
-            total: tracked.length,
-            color: "text-[oklch(0.58_0.22_27)]",
-            bg: "bg-[oklch(0.58_0.22_27)]/10",
-          },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className={cn(
-              "rounded-lg px-3 py-2.5 text-center",
-              stat.bg
-            )}
-          >
-            <div className={cn("text-2xl font-bold tabular-nums flex items-baseline justify-center", stat.color)}>
-              {stat.value}
-              <span className="text-sm font-medium opacity-60 ml-1">
-                / {stat.total}
-              </span>
+      {/* Summary bar & Legend */}
+      <div className="flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between p-1">
+          {[
+            {
+              label: "On Target",
+              value: met,
+              total: tracked.length,
+              color: "text-[oklch(0.55_0.16_155)]",
+              indicator: "bg-[oklch(0.55_0.16_155)]",
+            },
+            {
+              label: "Under Target",
+              value: under,
+              total: tracked.length,
+              color: "text-[oklch(0.65_0.18_25)]",
+              indicator: "bg-[oklch(0.65_0.18_25)]",
+            },
+            {
+              label: "Over Target",
+              value: over,
+              total: tracked.length,
+              color: "text-[oklch(0.58_0.22_27)]",
+              indicator: "bg-[oklch(0.58_0.22_27)]",
+            },
+          ].map((stat, i) => (
+            <div key={stat.label} className="flex-1 flex flex-col items-center py-3 relative">
+              {i !== 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-8 bg-border/50" />}
+              <div className="flex items-baseline gap-1.5">
+                <span className={cn("text-2xl font-bold tabular-nums", stat.color)}>{stat.value}</span>
+                <span className="text-xs font-medium text-muted-foreground/50">/ {stat.total}</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn("w-1.5 h-1.5 rounded-full", stat.indicator)} />
+                <span className="text-xs text-muted-foreground font-medium">{stat.label}</span>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-        {[
-          { dot: "bg-[oklch(0.65_0.18_25)]", label: "< 50%" },
-          { dot: "bg-[oklch(0.72_0.17_80)]", label: "50–89%" },
-          { dot: "bg-[oklch(0.55_0.16_155)]", label: "≥ 90% (target)" },
-          { dot: "bg-[oklch(0.58_0.22_27)]", label: "> Max Limit" },
-        ].map((l) => (
-          <span key={l.label} className="flex items-center gap-1.5">
-            <span className={cn("h-2 w-2 rounded-full", l.dot)} />
-            {l.label}
-          </span>
-        ))}
+          ))}
+        </div>
+        
+        <div className="border-t border-border/40 bg-muted/20 px-4 py-2 flex flex-wrap justify-center gap-x-6 gap-y-1.5 text-[11px] font-medium text-muted-foreground">
+          {[
+            { dot: "bg-[oklch(0.65_0.18_25)]", label: "< 50%" },
+            { dot: "bg-[oklch(0.72_0.17_80)]", label: "50–89%" },
+            { dot: "bg-[oklch(0.55_0.16_155)]", label: "≥ 90% (target)" },
+            { dot: "bg-[oklch(0.58_0.22_27)]", label: "> Max Limit" },
+          ].map((l) => (
+            <span key={l.label} className="flex items-center gap-1.5">
+              <span className={cn("h-1.5 w-1.5 rounded-full", l.dot)} />
+              {l.label}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Category sections */}
@@ -366,7 +376,7 @@ export function NutritionResults({ results }: NutritionResultsProps) {
           </h3>
           <div className="rounded-lg border border-border bg-card px-4">
             {nutrients.map((nutrient) => (
-              <NutrientRow key={nutrient.nutrient_name} nutrient={nutrient} />
+              <NutrientRow key={nutrient.nutrient_name} nutrient={nutrient} hoveredFoodId={hoveredFoodId} />
             ))}
           </div>
         </section>
