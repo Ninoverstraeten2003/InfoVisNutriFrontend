@@ -195,7 +195,7 @@ export default function MealBuilderPage() {
     } finally {
       setGenerating(false);
     }
-  }, [demographics, mealItems]);
+  }, [demographics, mealItems, templateMode]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 

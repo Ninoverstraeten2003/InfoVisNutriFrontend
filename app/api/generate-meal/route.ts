@@ -51,7 +51,14 @@ function generateRandomGenome(catalog: any, age: number, templateSlots: any[], u
       }
 
       if (validFoods.length > 0) {
-        const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
+        const existingIdsInMeal = genome.filter(g => g && g.meal_type === slot.meal).map(g => g.id);
+        const lockedIdsInMeal = unmatchedLocked.filter(g => g.meal_type === slot.meal).map(g => g.id);
+        const allExistingIds = [...existingIdsInMeal, ...lockedIdsInMeal];
+        
+        let freshFoods = validFoods.filter((f: any) => !allExistingIds.includes(f.id));
+        if (freshFoods.length === 0) freshFoods = validFoods;
+
+        const randomFood = freshFoods[Math.floor(Math.random() * freshFoods.length)];
         genome[i] = { ...randomFood, meal_type: slot.meal };
       } else {
         const keys = Object.keys(catalog);
@@ -85,7 +92,11 @@ function mutate(genome: any[], catalog: any, age: number, freeIndices: number[],
   }
 
   if (validFoods.length > 0) {
-    const randomFood = validFoods[Math.floor(Math.random() * validFoods.length)];
+    const existingIdsInMeal = newGenome.filter((g, i) => i !== mutateIdx && g && g.meal_type === slot.meal).map(g => g.id);
+    let freshFoods = validFoods.filter((f: any) => !existingIdsInMeal.includes(f.id));
+    if (freshFoods.length === 0) freshFoods = validFoods;
+
+    const randomFood = freshFoods[Math.floor(Math.random() * freshFoods.length)];
     newGenome[mutateIdx] = { ...randomFood, meal_type: slot.meal };
   }
   return newGenome;
