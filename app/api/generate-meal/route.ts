@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.POSTGREST_API_URL || "http://127.0.0.1:3000";
 const API_KEY = process.env.POSTGREST_API_KEY || "";
 
 const MEAL_TEMPLATE = [
-  { meal: "Breakfast", category: "carb_base" },
+  { meal: "Breakfast", category: "breakfast_carb" },
   { meal: "Breakfast", category: "beverage" },
   { meal: "Lunch", category: "main" },
   { meal: "Lunch", category: "side" },
@@ -15,11 +15,11 @@ const MEAL_TEMPLATE = [
 
 const SUPPLEMENT_ONLY_ULS = ["Magnesium", "Folate", "Vitamin B3", "Vitamin E (total)"];
 
-function generateRandomGenome(catalog: any, age: number, templateSlots: any[], unmatchedLocked: any[]) {
+function generateRandomGenome(catalog: any, age: number, templateSlots: any[], unmatchedLocked: any[], mealTemplateToUse: any[]) {
   const genome = [...templateSlots];
   for (let i = 0; i < genome.length; i++) {
     if (genome[i] === null) {
-      const slot = MEAL_TEMPLATE[i];
+      const slot = mealTemplateToUse[i];
       const cat = slot.category;
       let validFoods = catalog[cat] || [];
 
@@ -64,11 +64,11 @@ function generateRandomGenome(catalog: any, age: number, templateSlots: any[], u
   return [...genome, ...unmatchedLocked];
 }
 
-function mutate(genome: any[], catalog: any, age: number, freeIndices: number[]) {
+function mutate(genome: any[], catalog: any, age: number, freeIndices: number[], mealTemplateToUse: any[]) {
   if (freeIndices.length === 0) return genome;
   const newGenome = [...genome];
   const mutateIdx = freeIndices[Math.floor(Math.random() * freeIndices.length)];
-  const slot = MEAL_TEMPLATE[mutateIdx];
+  const slot = mealTemplateToUse[mutateIdx];
   const cat = slot.category;
 
   let validFoods = catalog[cat] || [];
@@ -236,12 +236,16 @@ export async function POST(request: NextRequest) {
       meal_type: i.meal_type
     }));
 
+    const mealTemplateToUse = body.meal_template && Array.isArray(body.meal_template) && body.meal_template.length > 0
+      ? body.meal_template
+      : MEAL_TEMPLATE;
+
     const templateSlots: any[] = [];
     const freeIndices: number[] = [];
     const unmatchedLocked = [...lockedItems];
 
-    for (let i = 0; i < MEAL_TEMPLATE.length; i++) {
-      const slot = MEAL_TEMPLATE[i];
+    for (let i = 0; i < mealTemplateToUse.length; i++) {
+      const slot = mealTemplateToUse[i];
       const matchIdx = unmatchedLocked.findIndex(l => l.meal_type === slot.meal);
       if (matchIdx !== -1) {
         templateSlots.push(unmatchedLocked[matchIdx]);
@@ -253,7 +257,7 @@ export async function POST(request: NextRequest) {
     }
 
     let population = Array.from({ length: POPULATION_SIZE }, () =>
-      generateRandomGenome(catalog, body.age, templateSlots, unmatchedLocked)
+      generateRandomGenome(catalog, body.age, templateSlots, unmatchedLocked, mealTemplateToUse)
     );
 
     let bestGenome: any = null;
@@ -279,7 +283,7 @@ export async function POST(request: NextRequest) {
       const newPopulation = [...survivors];
       while (newPopulation.length < POPULATION_SIZE) {
         const parent = survivors[Math.floor(Math.random() * survivors.length)];
-        newPopulation.push(mutate(parent, catalog, body.age, freeIndices));
+        newPopulation.push(mutate(parent, catalog, body.age, freeIndices, mealTemplateToUse));
       }
       population = newPopulation;
     }

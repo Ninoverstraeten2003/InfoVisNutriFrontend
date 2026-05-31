@@ -29,6 +29,7 @@ export default function MealBuilderPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredFoodId, setHoveredFoodId] = useState<number | null>(null);
+  const [templateMode, setTemplateMode] = useState<string>('default');
   const [demoOpen, setDemoOpen] = useState(true);
   const [countryOptions, setCountryOptions] = useState<{iso3: string, name: string}[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("AFG");
@@ -126,11 +127,63 @@ export default function MealBuilderPage() {
         serving_size_g: i.grams,
         meal_type: i.meal_type
       }));
+      let mealTemplatePayload = undefined;
+      if (templateMode === 'breakfast_only') {
+        mealTemplatePayload = [
+          { meal: "Breakfast", category: "breakfast_carb" },
+          { meal: "Breakfast", category: "breakfast_protein" },
+          { meal: "Breakfast", category: "beverage" }
+        ];
+      } else if (templateMode === 'lunch_only') {
+        mealTemplatePayload = [
+          { meal: "Lunch", category: "main" },
+          { meal: "Lunch", category: "side" },
+          { meal: "Lunch", category: "beverage" }
+        ];
+      } else if (templateMode === 'dinner_only') {
+        mealTemplatePayload = [
+          { meal: "Dinner", category: "main" },
+          { meal: "Dinner", category: "carb_base" },
+          { meal: "Dinner", category: "side" }
+        ];
+      } else if (templateMode === 'soup_and_salad') {
+        mealTemplatePayload = [
+          { meal: "Lunch", category: "soup" },
+          { meal: "Lunch", category: "side" },
+          { meal: "Lunch", category: "beverage" }
+        ];
+      } else if (templateMode === 'snacker') {
+        mealTemplatePayload = [
+          { meal: "Breakfast", category: "snack" },
+          { meal: "Lunch", category: "fruit" },
+          { meal: "Dinner", category: "snack" },
+          { meal: "Dinner", category: "dairy_side" }
+        ];
+      } else if (templateMode === 'quick_composite') {
+        mealTemplatePayload = [
+          { meal: "Breakfast", category: "composite_meal" },
+          { meal: "Lunch", category: "composite_meal" },
+          { meal: "Dinner", category: "composite_meal" }
+        ];
+      } else if (templateMode === 'bodybuilder') {
+        mealTemplatePayload = [
+          { meal: "Breakfast", category: "breakfast_protein" },
+          { meal: "Breakfast", category: "dairy_side" },
+          { meal: "Lunch", category: "main" },
+          { meal: "Lunch", category: "carb_base" },
+          { meal: "Dinner", category: "main" },
+          { meal: "Dinner", category: "main" }
+        ];
+      }
 
       const res = await fetch("/api/generate-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...demographics, locked_items: lockedItems }),
+        body: JSON.stringify({ 
+          ...demographics, 
+          locked_items: lockedItems,
+          meal_template: mealTemplatePayload 
+        }),
       });
       if (!res.ok) throw new Error("Generation failed");
       const data = await res.json();
@@ -248,33 +301,49 @@ export default function MealBuilderPage() {
 
             {/* Meal Tray */}
             <section
-              className="rounded-xl border border-border bg-card p-5 space-y-3"
+              className="rounded-xl border border-border bg-card p-5 space-y-4"
               aria-label="Meal tray"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="text-sm font-semibold text-foreground whitespace-nowrap">
                   Your Meal Tray
                 </h2>
-                <div className="flex items-center gap-3">
+                {mealItems.length > 0 && (
                   <button
-                    onClick={handleGenerate}
-                    disabled={generating}
-                    className="text-xs font-medium flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                    aria-label="Auto-generate an optimal meal plan"
+                    onClick={() => setMealItems([])}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label="Clear all meal items"
                   >
-                    {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-                    {generating ? "Generating..." : "Auto-Generate"}
+                    Clear all
                   </button>
-                  {mealItems.length > 0 && (
-                    <button
-                      onClick={() => setMealItems([])}
-                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                      aria-label="Clear all meal items"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <Select value={templateMode} onValueChange={setTemplateMode}>
+                  <SelectTrigger className="flex-1 h-9 bg-background transition-all focus:ring-primary/20">
+                    <SelectValue placeholder="Select meal plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Full Day (7 Items)</SelectItem>
+                    <SelectItem value="breakfast_only">Breakfast Only</SelectItem>
+                    <SelectItem value="lunch_only">Lunch Only</SelectItem>
+                    <SelectItem value="dinner_only">Dinner Only</SelectItem>
+                    <SelectItem value="soup_and_salad">Soup & Salad</SelectItem>
+                    <SelectItem value="quick_composite">All-in-One Meals</SelectItem>
+                    <SelectItem value="snacker">The Snacker</SelectItem>
+                    <SelectItem value="bodybuilder">Bodybuilder</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="h-9 shrink-0"
+                  aria-label="Auto-generate an optimal meal plan"
+                >
+                  {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                  Generate
+                </Button>
               </div>
               <MealTray
                 items={mealItems}
