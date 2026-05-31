@@ -172,8 +172,13 @@ export async function POST(request: NextRequest) {
     let matrix = cachedMatrix;
 
     if (!catalog || !matrix || !rawCatalog) {
+      console.log("Fetching GA Data from:", `${API_BASE_URL}/rpc/get_ga_data`);
       const gaDataRes = await fetch(`${API_BASE_URL}/rpc/get_ga_data`, { headers });
-      if (!gaDataRes.ok) throw new Error("Failed to fetch GA data");
+      if (!gaDataRes.ok) {
+        const errorText = await gaDataRes.text();
+        console.error("Fetch failed!", gaDataRes.status, errorText);
+        throw new Error(`Failed to fetch GA data: ${gaDataRes.status} from ${API_BASE_URL}`);
+      }
       const data = await gaDataRes.json();
       rawCatalog = data.catalog;
       matrix = data.matrix;
@@ -190,28 +195,25 @@ export async function POST(request: NextRequest) {
       cachedMatrix = matrix;
     }
 
-    // 2. Fetch Targets
-    // Create a fake meal with 0.0001g of everything to force DB to evaluate all nutrients
-    const fakeMeal = rawCatalog.map((f: any) => ({
-      food_id: f.id,
-      amount_g: 0.0001,
-    }));
-
+    // 2. Fetch Targets (Lightweight approach)
     const targetPayload = {
       p_age_years: body.age,
       p_sex: body.sex === "male" ? "Male" : body.sex === "female" ? "Female" : body.sex,
-      p_food_items: fakeMeal,
       p_pal: p_pal,
       p_body_weight_kg: body.weight_kg,
     };
 
-    const targetRes = await fetch(`${API_BASE_URL}/rpc/calculate_meal_nutrition`, {
+    const targetRes = await fetch(`${API_BASE_URL}/rpc/get_user_targets`, {
       method: "POST",
       headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify(targetPayload),
     });
 
-    if (!targetRes.ok) throw new Error("Failed to fetch targets");
+    if (!targetRes.ok) {
+      const errorText = await targetRes.text();
+      console.error("Target Fetch failed!", targetRes.status, errorText);
+      throw new Error(`Failed to fetch targets: ${targetRes.status} from ${API_BASE_URL}`);
+    }
     const targetData = await targetRes.json();
 
     const targets: any = {};
