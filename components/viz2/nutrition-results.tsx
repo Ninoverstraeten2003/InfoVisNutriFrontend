@@ -274,8 +274,8 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                         <span className={cn("leading-tight transition-colors duration-200", isOtherSelected ? "text-foreground font-bold" : "text-foreground/80")}>
                           {(hasTarget || hasMax) && (
                             <span 
-                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px]", getStatusColor(nutrient, "bg"))}
-                              style={{ opacity: 0.15 }}
+                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px]", getStatusColor(nutrient, "bg"), "transition-opacity duration-200")}
+                              style={{ opacity: isOtherSelected ? 0.3 : 0.15 }}
                             />
                           )}
                           <span className={cn("align-middle transition-all duration-200", isOtherSelected ? "font-bold" : "font-medium")}>Other</span>
