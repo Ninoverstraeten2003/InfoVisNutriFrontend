@@ -30,12 +30,7 @@ const SUPPLEMENT_ONLY_ULS = [
   'Vitamin E (total)'
 ];
 
-const PATTERNS = [
-  "repeating-linear-gradient(-45deg, currentColor, currentColor 1.5px, transparent 1.5px, transparent 3px)",
-  "repeating-linear-gradient(-45deg, currentColor, currentColor 3px, transparent 3px, transparent 6px)",
-  "repeating-linear-gradient(-45deg, currentColor, currentColor 5px, transparent 5px, transparent 10px)",
-  "repeating-linear-gradient(-45deg, currentColor, currentColor 8px, transparent 8px, transparent 16px)",
-];
+const OPACITIES = [1, 0.75, 0.5, 0.35];
 
 const showToxicityWarning = (nutrient: NutrientResult) => {
   if (SUPPLEMENT_ONLY_ULS.includes(nutrient.nutrient_name)) {
@@ -196,12 +191,11 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                           className={cn(
                             "h-full border-r-2 border-card transition-all duration-200", 
                             index === topSources.length - 1 && totalOtherValue <= 0.01 && "border-r-0",
-                            getStatusColor(nutrient, "text"),
-                            isAnyHovered && !isHovered ? "opacity-30" : "opacity-100"
+                            getStatusColor(nutrient, "bg")
                           )}
                           style={{ 
                             width: `${segmentPct}%`,
-                            backgroundImage: PATTERNS[index]
+                            opacity: isAnyHovered && !isHovered ? 0.15 : OPACITIES[index]
                           }}
                           title={`${b.food_name}: ${formatNumber(b.consumed_value)} ${nutrient.unit}`}
                         />
@@ -214,12 +208,13 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                       return (
                         <div
                           className={cn(
-                            "h-full border-y border-r border-current bg-transparent box-border transition-all duration-200 relative",
-                            topSources.length === 0 && "border-l",
-                            getStatusColor(nutrient, "text"),
-                            isAnyHovered && !isHovered ? "opacity-20" : (isHovered ? "opacity-100" : "opacity-60")
+                            "h-full transition-all duration-200",
+                            getStatusColor(nutrient, "bg")
                           )}
-                          style={{ width: `${(totalOtherValue / consumed) * 100}%` }}
+                          style={{ 
+                            width: `${(totalOtherValue / consumed) * 100}%`,
+                            opacity: isAnyHovered && !isHovered ? 0.05 : (isHovered ? 0.3 : 0.15)
+                          }}
                           title={`Other: ${formatNumber(totalOtherValue)} ${nutrient.unit}`}
                         />
                       );
@@ -261,8 +256,8 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                         <span className={cn("leading-tight transition-colors duration-200", isSelected ? "text-foreground font-bold" : "text-foreground/90")}>
                           {(hasTarget || hasMax) && (
                             <span 
-                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] bg-muted", getStatusColor(nutrient, "text"))} 
-                              style={{ backgroundImage: PATTERNS[index] }} 
+                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px]", getStatusColor(nutrient, "bg"))} 
+                              style={{ opacity: OPACITIES[index] }} 
                             />
                           )}
                           <span className={cn("align-middle transition-all duration-200", isSelected ? "font-bold" : "font-medium")}>{b.food_name}</span>
@@ -279,7 +274,8 @@ function NutrientRow({ nutrient, hoveredFoodId }: { nutrient: NutrientResult; ho
                         <span className={cn("leading-tight transition-colors duration-200", isOtherSelected ? "text-foreground font-bold" : "text-foreground/80")}>
                           {(hasTarget || hasMax) && (
                             <span 
-                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px] border border-current bg-transparent opacity-60", getStatusColor(nutrient, "text"))} 
+                              className={cn("inline-block w-8 h-3 mr-2 align-middle rounded-[2px]", getStatusColor(nutrient, "bg"))}
+                              style={{ opacity: 0.15 }}
                             />
                           )}
                           <span className={cn("align-middle transition-all duration-200", isOtherSelected ? "font-bold" : "font-medium")}>Other</span>
