@@ -31,11 +31,13 @@ export function FoodSearch({ onAdd }: FoodSearchProps) {
     }
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/food-options?q=${encodeURIComponent(q.trim())}`
-      );
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q.trim(), limit: 15 }),
+      });
       const data = await res.json();
-      setResults(Array.isArray(data) ? data : []);
+      setResults(data.results && Array.isArray(data.results) ? data.results : []);
       setOpen(true);
     } catch {
       setResults([]);
