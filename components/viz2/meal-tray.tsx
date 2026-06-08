@@ -3,8 +3,7 @@ import { Trash2, UtensilsCrossed, Minus, Plus, GripVertical, Lock, Unlock } from
 import { DndContext, useDraggable, useDroppable, DragEndEvent, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, closestCenter } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import type { MealItem } from "@/lib/types";
 
 interface MealTrayProps {
@@ -16,6 +15,21 @@ interface MealTrayProps {
   onHover?: (food_id: number | null) => void;
   hoveredFoodId?: number | null;
 }
+
+const getShorthand = (cat: string) => {
+  const l = cat.toLowerCase();
+  if (l.includes('carb')) return 'CARB';
+  if (l.includes('protein')) return 'PRO';
+  if (l.includes('beverage')) return 'BEV';
+  if (l.includes('dairy')) return 'DAI';
+  if (l.includes('fruit')) return 'FRU';
+  if (l.includes('snack')) return 'SNK';
+  if (l.includes('soup')) return 'SOUP';
+  if (l.includes('composite')) return 'COMP';
+  if (l === 'main') return 'MAIN';
+  if (l === 'side') return 'SIDE';
+  return cat.substring(0, 4).toUpperCase();
+};
 
 function MealTrayItem({ item, onRemove, onUpdateGrams, onToggleLock, onHover, isHovered }: { item: MealItem; onRemove: (id: number, mt?: string) => void; onUpdateGrams: (id: number, g: number, mt?: string) => void; onToggleLock?: (id: number, mt?: string) => void; onHover?: (id: number | null) => void; isHovered?: boolean }) {
   const [localGrams, setLocalGrams] = useState(item.grams.toString());
@@ -52,102 +66,111 @@ function MealTrayItem({ item, onRemove, onUpdateGrams, onToggleLock, onHover, is
     <div 
       ref={setNodeRef}
       style={style}
-      className={`flex flex-col gap-2 rounded-lg border bg-card p-3 group transition-all duration-200 cursor-pointer ${isHovered ? 'border-primary bg-primary/[0.03] shadow-sm' : 'border-border hover:border-primary/30'} ${isDragging ? 'opacity-50 scale-[1.02] shadow-xl' : ''}`}
+      className={`flex items-center gap-1 sm:gap-2 rounded-md border bg-card p-1.5 pl-1 group transition-all duration-200 cursor-pointer ${isHovered ? 'border-primary bg-primary/[0.03] shadow-sm' : 'border-border hover:border-primary/30'} ${isDragging ? 'opacity-50 scale-[1.02] shadow-xl' : ''}`}
       onClick={() => onHover?.(isHovered ? null : item.food_id)}
     >
-      <div className="flex items-start gap-2">
-        <div 
-          {...listeners} 
-          {...attributes} 
-          className="mt-0.5 shrink-0 cursor-grab touch-none opacity-40 hover:opacity-100 transition-opacity" 
-          onClick={e => e.stopPropagation()}
+      <div 
+        {...listeners} 
+        {...attributes} 
+        className="shrink-0 cursor-grab touch-none opacity-20 hover:opacity-100 transition-opacity p-0.5 sm:p-1" 
+        onClick={e => e.stopPropagation()}
+      >
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      
+      {/* Title + Tag */}
+      <div className="flex-1 min-w-0 flex items-center justify-between gap-2 pr-1">
+        <p className="text-sm font-medium text-foreground truncate" title={item.food_name}>
+          {item.food_name}
+        </p>
+        
+        {/* Simple Tag (Shorthand) */}
+        <span 
+          className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground bg-accent px-1.5 py-0.5 rounded-sm" 
+          title={item.food_category}
         >
-          <GripVertical className="h-4 w-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground leading-tight">
-            {item.food_name}
-          </p>
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-
-            <Badge
-              variant="secondary"
-              className="text-[10px] font-normal px-1.5 py-0"
-            >
-              {item.food_category}
-            </Badge>
-          </div>
-        </div>
-        <div className="flex items-center gap-0.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-7 w-7 p-0 ${item.is_locked ? 'text-primary opacity-100' : 'text-muted-foreground hover:text-foreground'}`}
-            onClick={(e) => { e.stopPropagation(); onToggleLock?.(item.food_id, item.meal_type); }}
-            aria-label={item.is_locked ? `Unlock ${item.food_name}` : `Lock ${item.food_name}`}
-          >
-            {item.is_locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={(e) => { e.stopPropagation(); onRemove(item.food_id, item.meal_type); }}
-            aria-label={`Remove ${item.food_name}`}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+          {getShorthand(item.food_category)}
+        </span>
       </div>
 
-      <div className="flex items-center justify-between border-t border-border/50 pt-2.5 mt-1">
-        <span className="text-xs text-muted-foreground">Portion size</span>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); stepGrams(-10); }}>
-            <Minus className="h-3.5 w-3.5" />
-          </Button>
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <Input
-              type="number"
-              min={1}
-              max={9999}
-              value={localGrams}
-              onChange={(e) => handleChange(e.target.value)}
-              onBlur={() => setLocalGrams(item.grams.toString())}
-              className="w-20 h-8 text-sm text-center pr-5 bg-background border-border focus-visible:ring-primary"
-              aria-label={`Grams of ${item.food_name}`}
-            />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-              g
-            </span>
-          </div>
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); stepGrams(10); }}>
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+      {/* Inputs (inline) */}
+      <div className="flex items-center shrink-0" onClick={e => e.stopPropagation()}>
+        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-muted-foreground" onClick={(e) => { e.stopPropagation(); stepGrams(-10); }}>
+          <Minus className="h-2.5 w-2.5" />
+        </Button>
+        <div className="relative w-10 sm:w-11">
+          <Input
+            type="number"
+            min={1}
+            max={9999}
+            value={localGrams}
+            onChange={(e) => handleChange(e.target.value)}
+            onBlur={() => setLocalGrams(item.grams.toString())}
+            className="w-full h-5 text-xs text-center px-0.5 pr-2.5 bg-background border-border focus-visible:ring-primary shadow-none [&::-webkit-inner-spin-button]:appearance-none"
+            aria-label={`Grams of ${item.food_name}`}
+          />
+          <span className="absolute right-0.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground pointer-events-none">
+            g
+          </span>
         </div>
+        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-muted-foreground" onClick={(e) => { e.stopPropagation(); stepGrams(10); }}>
+          <Plus className="h-2.5 w-2.5" />
+        </Button>
+      </div>
+
+      {/* Actions (Always visible, slightly dimmed) */}
+      <div className="flex items-center shrink-0 opacity-60 hover:opacity-100 group-hover:opacity-100 transition-opacity w-[40px] justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-5 w-5 p-0 ${item.is_locked ? 'text-primary opacity-100' : 'text-muted-foreground hover:text-foreground'}`}
+          onClick={(e) => { e.stopPropagation(); onToggleLock?.(item.food_id, item.meal_type); }}
+          aria-label={item.is_locked ? `Unlock ${item.food_name}` : `Lock ${item.food_name}`}
+        >
+          {item.is_locked ? <Lock className="h-2.5 w-2.5" /> : <Unlock className="h-2.5 w-2.5" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-5 w-5 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={(e) => { e.stopPropagation(); onRemove(item.food_id, item.meal_type); }}
+          aria-label={`Remove ${item.food_name}`}
+        >
+          <Trash2 className="h-2.5 w-2.5" />
+        </Button>
       </div>
     </div>
   );
 }
 
-function MealGroup({ mealType, children }: { mealType: string; children: React.ReactNode }) {
+function MealGroup({ mealType, items, children }: { mealType: string; items: MealItem[]; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({
     id: mealType,
   });
 
+  const totalGrams = items.reduce((sum, item) => sum + item.grams, 0);
+
   return (
-    <div 
-      ref={setNodeRef} 
-      className={`space-y-3 p-2 -mx-2 rounded-xl transition-colors duration-200 ${isOver ? 'bg-primary/5 ring-1 ring-primary/20' : ''}`}
-    >
-      <div className="flex items-center gap-3 px-1">
-        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{mealType}</h3>
-        <div className="h-px flex-1 bg-border/60" />
+    <AccordionItem value={mealType} className="border-b-0">
+      <div 
+        ref={setNodeRef} 
+        className={`rounded-lg transition-colors duration-200 ${isOver ? 'bg-primary/5 ring-1 ring-primary/20' : ''}`}
+      >
+        <AccordionTrigger className="hover:no-underline py-2 px-1">
+          <div className="flex items-center justify-between w-full pr-2">
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{mealType}</h3>
+            <span className="text-xs text-muted-foreground font-normal">
+              {items.length} items · {totalGrams}g
+            </span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-1.5 pb-2">
+            {children}
+          </div>
+        </AccordionContent>
       </div>
-      <div className="space-y-2">
-        {children}
-      </div>
-    </div>
+    </AccordionItem>
   );
 }
 
@@ -204,16 +227,17 @@ export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onT
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-6">
-        {sortedGroups.map(([mealType, mealItems]) => (
-          <MealGroup key={mealType} mealType={mealType}>
-            {mealItems.map((item) => (
-              <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onToggleLock={onToggleLock} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
-            ))}
-          </MealGroup>
-        ))}
+        <Accordion type="multiple" defaultValue={sortedGroups.map(([m]) => m)} className="space-y-1">
+          {sortedGroups.map(([mealType, mealItems]) => (
+            <MealGroup key={mealType} mealType={mealType} items={mealItems}>
+              {mealItems.map((item) => (
+                <MealTrayItem key={`${item.food_id}-${item.meal_type || "none"}`} item={item} onRemove={onRemove} onUpdateGrams={onUpdateGrams} onToggleLock={onToggleLock} onHover={onHover} isHovered={hoveredFoodId === item.food_id} />
+              ))}
+            </MealGroup>
+          ))}
+        </Accordion>
 
-        <div className="flex items-center justify-between pt-1 px-1">
+        <div className="flex items-center justify-between pt-3 px-1 mt-2 border-t border-border/50">
           <span className="text-xs text-muted-foreground">
             {items.length} item{items.length !== 1 ? "s" : ""}
           </span>
@@ -221,7 +245,6 @@ export function MealTray({ items, onRemove, onUpdateGrams, onUpdateMealType, onT
             {totalGrams}g total
           </span>
         </div>
-      </div>
     </DndContext>
   );
 }

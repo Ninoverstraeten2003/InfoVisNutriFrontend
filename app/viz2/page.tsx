@@ -280,7 +280,7 @@ export default function MealBuilderPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-6 items-start">
           {/* Left column: builder panel */}
           <aside className="space-y-5">
             {/* Food Search */}
